@@ -3,13 +3,15 @@
 # script to set up the ccs environment: user ccs, group, sudoers, directories
 #
 #------------------------------------------------------------------------------
+
 set -e
-#
+
 #- to run this on a fresh machine you need to copy locally as in:
-#  scp lsst-ss01:/u1/ir2admin/SetUpCCS.sh /tmp; sudo /tmp/SetUpCCS.sh
+#  scp lsst-ss01:/gpfs/slac/lsst/fs2/u1/ir2admin/SetUpCCS.sh /tmp
+#  sudo /tmp/SetUpCCS.sh
 #  or it will be in:
 #         /lnfs/lsst/ir2admin/SetUpCCS.sh, just run from there
-#
+#  or clone from https://github.com/lsst-camera-dh/ccs-infrastructure
 
 #------------------------------------------------------------------------------
 #-- group and user for ccs
