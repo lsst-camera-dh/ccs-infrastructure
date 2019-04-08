@@ -192,11 +192,11 @@ java -version 2>&1 | grep ${javaver} || {
 #------------------------------------------------------------------------------
 #- gdm and graphical stuff on workstations
 
-rpm --quiet -q gdm && $(
-      systemctl enable gdm
-      systemctl set-default graphical.target
-      yum remove -y gnome-initial-setup
-      )
+rpm --quiet -q gdm && {
+    systemctl enable gdm
+    systemctl set-default graphical.target
+    yum remove -y gnome-initial-setup
+}
 #------------------------------------------------------------------------------
 #- selinux
 setenforce 0
@@ -204,16 +204,17 @@ grep -q "SELINUX=enforcing" /etc/selinux/config && \
     sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
 #------------------------------------------------------------------------------
 #- firewalld
-rpm --quiet -q firewalld && $(
-      systemctl status firewalld | grep -qv 'Loaded: masked'\
-      && systemctl mask --now firewalld
-      )
+rpm -q firewalld >& /dev/null && {
+    systemctl status firewalld | grep -q 'Loaded: masked' || \
+        systemctl mask --now firewalld
+}
 #------------------------------------------------------------------------------
 #- ccs update-k5login
 [ -d /home/ccs/crontabs ] || mkdir /home/ccs/crontabs
-if [ ! -e /home/ccs/crontabs/update-k5login ] || \
-       [ ! -x /home/ccs/crontabs/update-k5login ] ; then
-   cat <<EOF >>/home/ccs/crontabs/update-k5login
+
+f=/home/ccs/crontabs/update-k5login
+if [ ! -e $f ] || [ ! -x $f ] ; then
+   cat <<EOF >>$f
 #!/bin/bash
 getent netgroup u-lsst-ccs |
  sed -e 's/(-,//g' |\
@@ -226,12 +227,11 @@ rsync --checksum /tmp/.k5login ~
 EOF
    chown -R ccs:ccs /home/ccs/crontabs
 fi
-[ -x /home/ccs/crontabs/update-k5login ] || \
-    chmod +x /home/ccs/crontabs/update-k5login
+[ -x $f ] || chmod +x $f
 #- run update-k5login
-sudo -u ccs /home/ccs/crontabs/update-k5login
+sudo -u ccs $f
 #- update the crontab file if needed
 crontab -u ccs -l | grep -q update-k5login ||\
-echo "0,15,30,45 * * * * /home/ccs/crontabs/update-k5login" | crontab -u ccs -
+echo "0,15,30,45 * * * * $f" | crontab -u ccs -
 #------------------------------------------------------------------------------
 #
