@@ -177,7 +177,7 @@ rpm --quiet -q gdm && $(
 #------------------------------------------------------------------------------------------------------------------
 #- selinux
 setenforce 0
-grep -q "SELINUX=enforcing" /etc/selinux/config && sed -i -e 's/enforcing/permissive/' /etc/selinux/config
+grep -q "SELINUX=enforcing" /etc/selinux/config && sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
 #------------------------------------------------------------------------------------------------------------------
 #- firewalld
 rpm --quiet -q firewalld && $(
