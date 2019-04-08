@@ -56,17 +56,21 @@ grep -q "^lsstadm:x:24000" /etc/group | grep  dh || gpasswd --add  dh lsstadm >/
 #-------------------------------------------------------------------------------------------------------------------
 #-- sudoers configuration
 #-- allows members of lsst-ccs unix group to run any command (and shell) as the "ccs" user
-#--
-#-- files
-if [ ! -e /etc/sudoers.d/group-lsst-ccs ] ; then echo "%lsst-ccs ALL = (ccs) ALL" > /etc/sudoers.d/group-lsst-ccs; fi
-if [ ! -e /etc/sudoers.d/user-turri ] ; then echo "turri   ALL=ALL" > /etc/sudoers.d/user-turri; fi
-if [ ! -e /etc/sudoers.d/user-tonyj ] ; then echo "tonyj   ALL=ALL" > /etc/sudoers.d/user-tonyj; fi
-if [ ! -e /etc/sudoers.d/user-marshall ] ; then echo "marshall   ALL=ALL" > /etc/sudoers.d/user-marshall; fi
+f=/etc/sudoers.d/group-lsst-ccs
+[ -e $f ] || touch $f
 
-#-- content of files
+grep -q "^%lsst-ccs ALL = (ccs) ALL" $f || \
+    echo "%lsst-ccs ALL = (ccs) ALL" >> $f
+grep -q "^%lsst-ccs ALL = (dh) ALL" $f || \
+    echo "%lsst-ccs ALL = (dh) ALL" >> $f
 
-grep "^%lsst-ccs ALL = (ccs) ALL" /etc/sudoers.d/group-lsst-ccs >/dev/null || echo "%lsst-ccs ALL = (ccs) ALL" >> /etc/sudoers.d/group-lsst-ccs
-grep "^%lsst-ccs ALL = (dh) ALL" /etc/sudoers.d/group-lsst-ccs >/dev/null || echo "%lsst-ccs ALL = (dh) ALL" >> /etc/sudoers.d/group-lsst-ccs
+sudoers="gmorris marshall tonyj turri"
+for u in $sudoers; do
+    f=/etc/sudoers.d/user-$u
+    [ -e $f ] && continue
+    echo "$u   ALL=ALL" > $f
+done
+
 #-------------------------------------------------------------------------------------------------------------------
 
 #- get nfs set up
