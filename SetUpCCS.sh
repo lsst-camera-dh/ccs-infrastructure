@@ -2,7 +2,7 @@
 #
 # script to set up the ccs environment: user ccs, group, sudoers, directories
 #
-#-------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 set -e
 #
 #- to run this on a fresh machine you need to copy locally as in:
@@ -11,51 +11,66 @@ set -e
 #         /lnfs/lsst/ir2admin/SetUpCCS.sh, just run from there
 #
 
-#-------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #-- group and user for ccs
 #
-grep -q "^ccs:x:23000" /etc/passwd || /usr/sbin/adduser -c "CCS Operator Account" --groups dialout --create-home --uid 23000 ccs
+grep -q "^ccs:x:23000" /etc/passwd || \
+    /usr/sbin/adduser -c "CCS Operator Account" --groups dialout \
+                      --create-home --uid 23000 ccs
 
-#-------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #-- location for ccs software
 #
 if [ ! -d /opt/lsst/ccs ] ; then mkdir -p /opt/lsst/ccs; fi
-stat -c %u:%g /opt/lsst/ccs | grep -q "23000:23000" || chown ccs.ccs /opt/lsst/ccs
+stat -c %u:%g /opt/lsst/ccs | grep -q "23000:23000" || \
+    chown ccs.ccs /opt/lsst/ccs
 if [ ! -d /opt/lsst/ccsadm ] ; then mkdir -p /opt/lsst/ccsadm; fi
-stat -c %u:%g /opt/lsst/ccsadm | grep -q "23000:23000" || chown ccs.ccs /opt/lsst/ccsadm
+stat -c %u:%g /opt/lsst/ccsadm | grep -q "23000:23000" || \
+    chown ccs.ccs /opt/lsst/ccsadm
 #-- /lsst link management
 if [ ! -h /lsst ] ; then ln -s /opt/lsst /lsst; fi
 if [ -d /lsst/release ] ; then mv  /lsst/release /lsst/ccsadm/; fi
-if [ -d /lsst/dev-package-lists ] ; then mv  /lsst/dev-package-lists /lsst/ccsadm/; fi
+if [ -d /lsst/dev-package-lists ] ; then
+    mv /lsst/dev-package-lists /lsst/ccsadm/
+fi
 #-- log area
 if [ ! -d /var/log/ccs ] ; then mkdir -p /var/log/ccs; fi
-stat -c %u:%g /var/log/ccs | grep -q "0:23000" || $(chown root.ccs /var/log/ccs; chmod g+s /var/log/ccs; chmod a+rw /var/log/ccs)
+stat -c %u:%g /var/log/ccs | grep -q "0:23000" || \
+    $(chown root.ccs /var/log/ccs; chmod g+s /var/log/ccs; chmod a+rw /var/log/ccs)
 #-- etc/ccs
-if [ ! -d /etc/ccs ] ; then mkdir -p /etc/ccs; fi
-stat -c %u:%g /etc/ccs | grep -q "0:23000" || $(chown root.ccs /etc/ccs; chmod g+srw /etc/ccs)
+[ -d /etc/ccs ] || mkdir -p /etc/ccs
+stat -c %u:%g /etc/ccs | grep -q "0:23000" || \
+    $(chown root.ccs /etc/ccs; chmod g+srw /etc/ccs)
 #-- etc/ccs/ccsGlobal.properties file management
-if [ ! -e /etc/ccs/ccsGlobal.properties ] ; then touch /etc/ccs/ccsGlobal.properties; fi
-grep "^org.lsst.ccs.level=INFO" /etc/ccs/ccsGlobal.properties >/dev/null || echo "org.lsst.ccs.level=INFO" >> /etc/ccs/ccsGlobal.properties
-grep "^org.lsst.ccs.logdir=/var/log/ccs" /etc/ccs/ccsGlobal.properties >/dev/null || echo "org.lsst.ccs.logdir=/var/log/ccs" >> /etc/ccs/ccsGlobal.properties
+[ -e /etc/ccs/ccsGlobal.properties ] || touch /etc/ccs/ccsGlobal.properties
+grep -q "^org.lsst.ccs.level=INFO" /etc/ccs/ccsGlobal.properties || \
+    echo "org.lsst.ccs.level=INFO" >> /etc/ccs/ccsGlobal.properties
+grep -q "^org.lsst.ccs.logdir=/var/log/ccs" /etc/ccs/ccsGlobal.properties \
+    || echo "org.lsst.ccs.logdir=/var/log/ccs" >> /etc/ccs/ccsGlobal.properties
 #-- etc/ccs/ccsGlobal.properties file management
-if [ ! -e /etc/ccs/udp_ccs.properties ] ; then touch /etc/ccs/udp_ccs.properties; fi
-grep "^org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" /etc/ccs/udp_ccs.properties >/dev/null || echo "org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" >> /etc/ccs/udp_ccs.properties
+[ -e /etc/ccs/udp_ccs.properties ] || touch /etc/ccs/udp_ccs.properties
+grep -q "^org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" /etc/ccs/udp_ccs.properties || \
+    echo "org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" >> /etc/ccs/udp_ccs.properties
 
 
-
-#-------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #- add the dh account
-grep -q "23001" /etc/passwd || /usr/sbin/adduser -c "LSST Data Handling Account" --groups dialout --create-home --uid 23001 dh
+grep -q "23001" /etc/passwd || \
+    /usr/sbin/adduser -c "LSST Data Handling Account" \
+                      --groups dialout --create-home --uid 23001 dh
 
-#-------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #- add and manage the lsstadm group
 grep -q "^lsstadm:x:24000" /etc/group || groupadd --gid 24000 lsstadm
-grep -q "^lsstadm:x:24000.*ccs" /etc/group || gpasswd --add ccs lsstadm >/dev/null
-grep -q "^lsstadm:x:24000.*dh" /etc/group || gpasswd --add dh lsstadm >/dev/null
+grep -q "^lsstadm:x:24000.*ccs" /etc/group || \
+    gpasswd --add ccs lsstadm >/dev/null
+grep -q "^lsstadm:x:24000.*dh" /etc/group || \
+    gpasswd --add dh lsstadm >/dev/null
 
-#-------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #-- sudoers configuration
-#-- allows members of lsst-ccs unix group to run any command (and shell) as the "ccs" user
+#-- allows members of lsst-ccs unix group to run any command (and shell) as
+#   the "ccs" user
 f=/etc/sudoers.d/group-lsst-ccs
 [ -e $f ] || touch $f
 
@@ -71,7 +86,7 @@ for u in $sudoers; do
     echo "$u   ALL=ALL" > $f
 done
 
-#-------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 #- get nfs set up
 #- need nfs programs
@@ -150,12 +165,12 @@ if [ ! -d /lnfs ] ; then mkdir /lnfs; fi
 if [ ! -L /lnfs/lsst ] ; then ln -s /gpfs/slac/lsst/fs2/u1 /lnfs/lsst; fi
 
 
-#-------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #- dh software is in NFS
 if [ ! -h /lsst/dh ] ; then ln -s /lnfs/lsst/dh /lsst/dh; fi
 if [ ! -h /lsst/data ] ; then ln -s /lnfs/lsst/data /lsst/data; fi
 
-#-------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #- install the correct java from nfs
 jdkrpm=/lnfs/lsst/pkgarchive/jdk-8u112-linux-x64.rpm
 javaver=$(rpm -qi -p ${jdkrpm} | gawk '/^Version/ {print $3}';)
@@ -163,10 +178,11 @@ javapkg=$(rpm -q -p ${jdkrpm})
 rpm --quiet -q ${javapkg} || $(rpm -i ${jdkrpm})
 java -version 2>&1 | grep ${javaver} || $(
    for cmd in java javac javaws jar jconsole ; do
-      update-alternatives --install /usr/bin/${cmd} ${cmd} /usr/java/jdk${javaver}/bin/${cmd} 1000
+      update-alternatives --install /usr/bin/${cmd} ${cmd} \
+                          /usr/java/jdk${javaver}/bin/${cmd} 1000
       update-alternatives --set ${cmd} /usr/java/jdk${javaver}/bin/${cmd}
    done)
-#-------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #- gdm and graphical stuff on workstations
 
 rpm --quiet -q gdm && $(
@@ -174,20 +190,22 @@ rpm --quiet -q gdm && $(
       systemctl set-default graphical.target
       yum remove -y gnome-initial-setup
       )
-#------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #- selinux
 setenforce 0
-grep -q "SELINUX=enforcing" /etc/selinux/config && sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
-#------------------------------------------------------------------------------------------------------------------
+grep -q "SELINUX=enforcing" /etc/selinux/config && \
+    sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
+#------------------------------------------------------------------------------
 #- firewalld
 rpm --quiet -q firewalld && $(
       systemctl status firewalld | grep -qv 'Loaded: masked'\
       && systemctl mask --now firewalld
       )
-#------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #- ccs update-k5login
-if [ ! -d /home/ccs/crontabs ] ; then mkdir /home/ccs/crontabs ; fi
-if [ ! -e /home/ccs/crontabs/update-k5login ] || [ ! -x /home/ccs/crontabs/update-k5login ] ; then
+[ -d /home/ccs/crontabs ] || mkdir /home/ccs/crontabs
+if [ ! -e /home/ccs/crontabs/update-k5login ] || \
+       [ ! -x /home/ccs/crontabs/update-k5login ] ; then
    cat <<EOF >>/home/ccs/crontabs/update-k5login
 #!/bin/bash
 getent netgroup u-lsst-ccs |
@@ -201,11 +219,12 @@ rsync --checksum /tmp/.k5login ~
 EOF
    chown -R ccs:ccs /home/ccs/crontabs
 fi
-if [ ! -x /home/ccs/crontabs/update-k5login ] ; then chmod +x /home/ccs/crontabs/update-k5login ; fi
+[ -x /home/ccs/crontabs/update-k5login ] || \
+    chmod +x /home/ccs/crontabs/update-k5login
 #- run update-k5login
 sudo -u ccs /home/ccs/crontabs/update-k5login
 #- update the crontab file if needed
 crontab -u ccs -l | grep -q update-k5login ||\
 echo "0,15,30,45 * * * * /home/ccs/crontabs/update-k5login" | crontab -u ccs -
-#------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #
