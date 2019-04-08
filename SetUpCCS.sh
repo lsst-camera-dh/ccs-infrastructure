@@ -50,8 +50,8 @@ grep -q "23001" /etc/passwd || /usr/sbin/adduser -c "LSST Data Handling Account"
 #-------------------------------------------------------------------------------------------------------------------
 #- add and manage the lsstadm group
 grep -q "^lsstadm:x:24000" /etc/group || groupadd --gid 24000 lsstadm
-grep -q "^lsstadm:x:24000" /etc/group | grep ccs || gpasswd --add ccs lsstadm >/dev/null
-grep -q "^lsstadm:x:24000" /etc/group | grep  dh || gpasswd --add  dh lsstadm >/dev/null
+grep -q "^lsstadm:x:24000.*ccs" /etc/group || gpasswd --add ccs lsstadm >/dev/null
+grep -q "^lsstadm:x:24000.*dh" /etc/group || gpasswd --add dh lsstadm >/dev/null
 
 #-------------------------------------------------------------------------------------------------------------------
 #-- sudoers configuration
