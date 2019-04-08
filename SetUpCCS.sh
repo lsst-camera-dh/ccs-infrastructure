@@ -98,7 +98,7 @@ done
 
 #- get nfs set up
 #- need nfs programs
-rpm --quiet -q nfs-utils || yum -y install nfs-utils
+rpm --quiet -q nfs-utils || yum -d1 -y install nfs-utils
 
 #- get rid of old /lnfs/lsst mount point if in use and entry in fstab
 mount | grep -q lnfs && umount /lnfs/lsst
@@ -197,7 +197,7 @@ java -version 2>&1 | grep ${javaver} || {
 rpm --quiet -q gdm && {
     systemctl enable gdm
     systemctl set-default graphical.target
-    yum remove -y gnome-initial-setup
+    yum -d1 -y remove -gnome-initial-setup
 }
 #------------------------------------------------------------------------------
 #- selinux
@@ -206,7 +206,7 @@ grep -q "SELINUX=enforcing" /etc/selinux/config && \
     sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
 #------------------------------------------------------------------------------
 #- firewalld
-rpm -q firewalld >& /dev/null && {
+rpm --quiet -q firewalld && {
     systemctl status firewalld | grep -q 'Loaded: masked' || \
         systemctl mask --now firewalld
 }
