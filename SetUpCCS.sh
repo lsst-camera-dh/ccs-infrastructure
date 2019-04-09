@@ -212,9 +212,9 @@ rpm --quiet -q firewalld && {
 }
 #------------------------------------------------------------------------------
 #- ccs update-k5login
-[ -d /home/ccs/crontabs ] || mkdir /home/ccs/crontabs
+[ -d ~ccs/crontabs ] || mkdir ~ccs/crontabs
 
-f=/home/ccs/crontabs/update-k5login
+f=~ccs/crontabs/update-k5login
 if [ ! -e $f ] || [ ! -x $f ] ; then
    cat <<EOF >>$f
 #!/bin/bash
@@ -227,7 +227,7 @@ getent netgroup u-lsst-ccs |
 rsync --checksum /tmp/.k5login ~
 
 EOF
-   chown -R ccs:ccs /home/ccs/crontabs
+   chown -R ccs:ccs ~ccs/crontabs
 fi
 [ -x $f ] || chmod +x $f
 #- run update-k5login
@@ -237,3 +237,30 @@ crontab -u ccs -l | grep -q update-k5login ||\
 echo "0,15,30,45 * * * * $f" | crontab -u ccs -
 #------------------------------------------------------------------------------
 #
+
+## Files required for CCS software.
+## https://jira.slac.stanford.edu/browse/LSSTIR-40
+
+rpm --quiet -q rsync || yum -d1 -y install rsync
+
+ccs_scripts=~ccs/scripts
+ccs_scripts_src=lsst-mcm:scripts
+
+[ -e $ccs_scripts/installCCS.sh ] || {
+
+    rsync -aSH ccs@$ccs_scripts_src/ $ccs_scripts/
+    chown -R ccs:ccs $ccs_scripts
+}
+
+
+ccsadm=/opt/lsst/ccsadm             # created above
+
+github=https://github.com/lsst-camera-dh
+
+rpm --quiet -q git || yum -d1 -y install git
+
+[ -e $ccsadm/release ] || \
+    su ccs -c "cd $ccsadm && git clone $github/release.git"
+
+[ -e $ccsadm/dev-package-lists ] || \
+    su ccs -c "cd $ccsadm && git clone $github/dev-package-lists.git"
