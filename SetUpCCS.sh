@@ -265,6 +265,10 @@ rpm --quiet -q git || yum -d1 -y install git
 [ -e $ccsadm/dev-package-lists ] || \
     su ccs -c "cd $ccsadm && git clone $github/dev-package-lists.git"
 
+## To actually install it:
+## (Needs the host to be registered somewhere, else does nothing?)
+###su ccs -c "~ccs/scripts/installCCS.sh IR2 console"
+
 
 ## Environment variables etc.
 f=/etc/profile.d/lsst-ccs.sh
@@ -278,3 +282,6 @@ grep -q "OMP_NUM_THREADS" $f || \
 export OMP_NUM_THREADS=1
 EOF
 
+
+## EPEL
+yum -d1 -y install x2goclient x2goserver x2godesktopsharing
