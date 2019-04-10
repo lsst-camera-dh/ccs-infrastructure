@@ -285,3 +285,18 @@ EOF
 
 ## EPEL
 yum -d1 -y install x2goclient x2goserver x2godesktopsharing
+
+
+## grub
+## https://github.com/sriemer/fix-linux-mouse/
+## Prevent console spam from some common dell usb mice.
+f=/etc/default/grub
+grep -q usbhid.quirks $f || \
+    sed -i.ORIG -e '/^GRUB_CMDLINE_LINUX=/ s/"$/ usbhid.quirks=0x413c:0x301a:0x00000400,0x04ca:0x0061:0x00000400"/' \
+    $f
+
+grubfile=/boot/efi/EFI/centos/grub.cfg
+
+[ -e $grubfile ] || grubfile=/boot/grub2/grub.cfg
+
+grub2-mkconfig -o $grubfile
