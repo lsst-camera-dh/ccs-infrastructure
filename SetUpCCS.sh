@@ -321,6 +321,8 @@ EOF
 
 ## FIXME this won't work because until we get this key we cannot login
 ## to other hosts. Need a common file-system (eg nfs).
-rsync -a lsst-mcm:.ssh/id_dsa .ssh/ || \
-    echo "Failed to copy .ssh/id_dsa - push from another host"
+rsync -aX lsst-mcm:.ssh/id_dsa .ssh/ || \
+    echo "Failed to copy /root/.ssh/id_dsa - push from another host"
 
+rsync -aX lsst-mcm:/etc/ssh/ssh_known_hosts /etc/ssh/ || \
+    echo "Failed to copy /etc/ssh/ssh_known_hosts - push from another host"
