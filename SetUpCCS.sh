@@ -326,3 +326,34 @@ rsync -aX lsst-mcm:.ssh/id_dsa .ssh/ || \
 
 rsync -aX lsst-mcm:/etc/ssh/ssh_known_hosts /etc/ssh/ || \
     echo "Failed to copy /etc/ssh/ssh_known_hosts - push from another host"
+
+
+### Host-specific stuff.
+shost=${HOSTNAME%%.*}
+
+[ $shost = lsst-ir2daq01 ] && {
+    ## FIXME interface name may vary - discover/check it?
+    f=/etc/NetworkManager/dispatcher.d/30-ethtool
+    [ -e $f ] || cat <<'EOF' > $f
+#!/bin/sh
+
+# https://access.redhat.com/solutions/2841131
+
+myname=${0##*/}
+log() { logger -p user.info -t "${myname}" "$*"; }
+IFACE=$1
+ACTION=$2
+
+log "IFACE = $1, ACTION = $2"
+
+if [ "$IFACE" == "p3p1" ] && [ "$ACTION" == "up" ]; then
+    log "ethool set-ring ${IFACE} rx 4096 tx 4096"
+    /sbin/ethtool --set-ring ${IFACE} rx 4096 tx 4096
+    log "ethool pause ${IFACE} autoneg off rx off tx off"
+    /sbin/ethtool --pause ${IFACE} autoneg off rx off tx off
+fi
+
+exit 0
+EOF
+
+}                               # ir2daq01
