@@ -210,10 +210,11 @@ java -version 2>&1 | grep -q -F ${javaver} || {
 #------------------------------------------------------------------------------
 #- gdm and graphical stuff on workstations
 
+## FIXME restrict by hostname.
 rpm --quiet -q gdm && {
     systemctl enable gdm
     systemctl set-default graphical.target
-    yum -d1 -y remove -gnome-initial-setup
+    yum -d1 -y remove gnome-initial-setup
 }
 #------------------------------------------------------------------------------
 #- selinux
