@@ -264,6 +264,9 @@ rpm --quiet -q rsync || yum -d1 -y install rsync
 ccs_scripts=~ccs/scripts
 ccs_scripts_src=lsst-mcm:scripts
 
+## NB prevent prompts about host keys.
+export RSYNC_RSH="ssh -o StrictHostKeyChecking=no"
+
 [ -e $ccs_scripts/installCCS.sh ] || {
 
     rsync -aSH ccs@$ccs_scripts_src/ $ccs_scripts/
