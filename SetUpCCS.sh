@@ -6,6 +6,8 @@
 
 set -e
 
+shost=${HOSTNAME%%.*}
+
 ## Maybe this is better done separately?
 echo "yum install gnome"
 yum -q -y groups install "GNOME Desktop"
@@ -157,9 +159,13 @@ EOF
     [ -e $gpfs_autofs ] || touch $gpfs_autofs
 
     ## NB need vers=3 to avoid problems with (bonded) wifi.
-    ## FIXME only use this for aio hosts.
+    case $shost in
+        *-aio*) opt="  vers=3" ;;
+        *) opt= ;;
+    esac
+
     grep -q $auto_gpfs $gpfs_autofs || \
-        echo "/-	$auto_gpfs	vers=3" >> $gpfs_autofs
+        echo "/-	${auto_gpfs}${opt}" >> $gpfs_autofs
 
 
     ## Remove "sss" so as to avoid a bunch of SLAC NFS that we don't want.
@@ -334,7 +340,6 @@ rsync -aX lsst-mcm:/etc/ssh/ssh_known_hosts /etc/ssh/ || \
 
 
 ### Host-specific stuff.
-shost=${HOSTNAME%%.*}
 
 [ $shost = lsst-ir2daq01 ] && {
     ## FIXME interface name may vary - discover/check it?
