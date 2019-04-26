@@ -8,10 +8,15 @@ set -e
 
 shost=${HOSTNAME%%.*}
 
-## Maybe this is better done separately?
-echo "yum install gnome"
-yum -q -y groups install "GNOME Desktop"
-yum -q -y install git emacs
+## Slow. Maybe better done separately?
+yum group list installed | grep -qi "GNOME Desktop" || {
+    echo "Installing gnome"
+    yum -q -y groups install "GNOME Desktop"
+}
+
+for f in git emacs; do
+    rpm --quiet -q $f || yum -q -y install $f
+done
 
 #- to run this on a fresh machine you need to copy locally as in:
 #  scp lsst-ss01:/gpfs/slac/lsst/fs2/u1/ir2admin/SetUpCCS.sh /tmp
