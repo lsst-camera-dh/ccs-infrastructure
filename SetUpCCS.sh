@@ -251,7 +251,7 @@ fi
 #- run update-k5login
 sudo -u ccs $f
 #- update the crontab file if needed
-crontab -u ccs -l | grep -q update-k5login ||\
+crontab -u ccs -l >& /dev/null | grep -q update-k5login || \
 echo "0,15,30,45 * * * * $f" | crontab -u ccs -
 #------------------------------------------------------------------------------
 #
