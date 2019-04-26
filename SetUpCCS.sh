@@ -178,8 +178,9 @@ EOF
     sed -i.ORIG 's/^automount:.*/automount:	files/' /etc/nsswitch.conf
 
 
-    systemctl enable autofs
-    systemctl start autofs
+    systemctl -q is-enabled autofs || systemctl enable autofs
+    ## TODO only if necessary, ie if not running or we changed something.
+    systemctl restart autofs
 
 }                               # native_gpfs
 
