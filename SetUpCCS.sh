@@ -169,7 +169,7 @@ EOF
 
 
 #- fix up so old /lnfs path still works
-[ -d /lnfs ] || /lnfs
+[ -d /lnfs ] || mkdir /lnfs
 [ -L /lnfs/lsst ] || ln -s /gpfs/slac/lsst/fs2/u1 /lnfs/lsst
 
 
