@@ -266,7 +266,7 @@ ccs_scripts=~ccs/scripts
 ccs_scripts_src=lsst-mcm:scripts
 
 ## NB prevent prompts about host keys.
-export RSYNC_RSH="ssh -o StrictHostKeyChecking=no"
+export RSYNC_RSH="ssh -o StrictHostKeyChecking=no -oBatchMode=yes"
 
 [ -e $ccs_scripts/installCCS.sh ] || {
 
