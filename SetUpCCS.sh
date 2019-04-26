@@ -215,7 +215,8 @@ java -version 2>&1 | grep -q -F ${javaver} || {
 rpm --quiet -q gdm && {
     systemctl enable gdm
     systemctl set-default graphical.target
-    yum -d1 -y remove gnome-initial-setup
+    ! rpm --quiet -q gnome-initial-setup || \
+        yum -d1 -y remove gnome-initial-setup
 }
 #------------------------------------------------------------------------------
 #- selinux
@@ -305,6 +306,7 @@ EOF
 
 
 ## EPEL
+## TODO graphical hosts only.
 yum -d1 -y install x2goclient x2goserver x2godesktopsharing
 
 
