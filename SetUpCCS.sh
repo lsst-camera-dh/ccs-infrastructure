@@ -12,6 +12,7 @@ shost=${HOSTNAME%%.*}
 yum group list installed | grep -qi "GNOME Desktop" || {
     echo "Installing gnome"
     yum -q -y groups install "GNOME Desktop"
+    yum clean all
 }
 
 for f in git emacs; do
@@ -200,7 +201,7 @@ EOF
 jdkrpm=/lnfs/lsst/pkgarchive/jdk-8u112-linux-x64.rpm
 javaver=$(rpm -qi -p ${jdkrpm} | gawk '/^Version/ {print $3}';)
 javapkg=$(rpm -q -p ${jdkrpm})
-rpm --quiet -q ${javapkg} || rpm -i ${jdkrpm}
+rpm --quiet -q ${javapkg} || rpm -i ${jdkrpm} > /dev/null
 java -version 2>&1 | grep -q -F ${javaver} || {
    for cmd in java javac javaws jar jconsole ; do
       update-alternatives --install /usr/bin/${cmd} ${cmd} \
@@ -216,7 +217,7 @@ rpm --quiet -q gdm && {
     systemctl enable gdm
     systemctl set-default graphical.target
     ! rpm --quiet -q gnome-initial-setup || \
-        yum -d1 -y remove gnome-initial-setup
+        yum -q -y remove gnome-initial-setup
 }
 #------------------------------------------------------------------------------
 #- selinux
@@ -308,7 +309,7 @@ EOF
 ## EPEL
 ## TODO graphical hosts only.
 rpm -q --quiet x2goclient || \
-    yum -d1 -y install x2goclient x2goserver x2godesktopsharing
+    yum -q -y install x2goclient x2goserver x2godesktopsharing
 
 
 ## grub
