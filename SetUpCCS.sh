@@ -37,7 +37,7 @@ for d in release dev-package-lists; do
 done
 
 #-- log area, etc/ccs
-for f in /var/log/ccs /etc/ccs; do
+for d in /var/log/ccs /etc/ccs; do
     [ -d $d ] || mkdir -p $d
     stat -c %u:%g $d | grep -q "0:23000" && continue
     chown root.ccs $d
