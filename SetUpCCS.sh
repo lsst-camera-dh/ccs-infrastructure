@@ -6,6 +6,11 @@
 
 set -e
 
+## Maybe this is better done separately?
+echo "yum install gnome"
+yum -q -y groups install "GNOME Desktop"
+yum -q -y install git emacs
+
 #- to run this on a fresh machine you need to copy locally as in:
 #  scp lsst-ss01:/gpfs/slac/lsst/fs2/u1/ir2admin/SetUpCCS.sh /tmp
 #  sudo /tmp/SetUpCCS.sh
