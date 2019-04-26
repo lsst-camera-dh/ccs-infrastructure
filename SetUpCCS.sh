@@ -194,8 +194,8 @@ EOF
 jdkrpm=/lnfs/lsst/pkgarchive/jdk-8u112-linux-x64.rpm
 javaver=$(rpm -qi -p ${jdkrpm} | gawk '/^Version/ {print $3}';)
 javapkg=$(rpm -q -p ${jdkrpm})
-rpm --quiet -q ${javapkg} || $(rpm -i ${jdkrpm})
-java -version 2>&1 | grep ${javaver} || {
+rpm --quiet -q ${javapkg} || rpm -i ${jdkrpm}
+java -version 2>&1 | grep -q -F ${javaver} || {
    for cmd in java javac javaws jar jconsole ; do
       update-alternatives --install /usr/bin/${cmd} ${cmd} \
                           /usr/java/jdk${javaver}/bin/${cmd} 1000
