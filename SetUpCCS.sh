@@ -148,7 +148,7 @@ EOF
 
         f=/gpfs/slac/lsst/$f
 
-        [ -e $f ] && umount $f
+        mount | grep -q $f && umount $f
 
         mkdir -p ${f%/*}
 
