@@ -8,6 +8,12 @@ set -e
 
 shost=${HOSTNAME%%.*}
 
+timedatectl | grep -q "RTC in local TZ: yes" && {
+    echo "Setting RTC to UTC"
+    timedatectl set-local-rtc 0
+    /usr/sbin/hwclock -w        # should not be needed, but is?
+}
+
 ## Slow. Maybe better done separately?
 yum group list installed | grep -qi "GNOME Desktop" || {
     echo "Installing gnome"
