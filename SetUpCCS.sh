@@ -3,6 +3,13 @@
 # script to set up the ccs environment: user ccs, group, sudoers, directories
 #
 #------------------------------------------------------------------------------
+# To run this script on a fresh machine, first get a local copy.
+# The best method is to use:
+# git clone https://github.com/lsst-camera-dh/ccs-infrastructure
+# Or (but these may not be as up-to-date as the above version):
+#  scp lsst-ss01:/gpfs/slac/lsst/fs2/u1/ir2admin/SetUpCCS.sh /tmp
+#  sudo /tmp/SetUpCCS.sh
+#  or run directly from /lnfs/lsst/ir2admin/SetUpCCS.sh
 
 set -e
 
@@ -24,13 +31,6 @@ yum group list installed | grep -qi "GNOME Desktop" || {
 for f in git emacs; do
     rpm --quiet -q $f || yum -q -y install $f
 done
-
-#- to run this on a fresh machine you need to copy locally as in:
-#  scp lsst-ss01:/gpfs/slac/lsst/fs2/u1/ir2admin/SetUpCCS.sh /tmp
-#  sudo /tmp/SetUpCCS.sh
-#  or it will be in:
-#         /lnfs/lsst/ir2admin/SetUpCCS.sh, just run from there
-#  or clone from https://github.com/lsst-camera-dh/ccs-infrastructure
 
 #------------------------------------------------------------------------------
 #-- group and user for ccs
