@@ -132,6 +132,8 @@ grep -q "^lsst-fs[123].*gpfs" /etc/fstab && native_gpfs=t
 
 [ "$native_gpfs" ] || {
 
+    rpm --quiet -q autofs || yum -d1 -y install autofs
+
     auto_gpfs=/etc/auto.gpfs
 
     [ -e $auto_gpfs ] || cat <<EOF > $auto_gpfs
