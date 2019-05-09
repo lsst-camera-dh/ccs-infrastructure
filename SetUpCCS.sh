@@ -132,6 +132,11 @@ grep -q "^lsst-fs[123].*gpfs" /etc/fstab && native_gpfs=t
 
 [ "$native_gpfs" ] || {
 
+    ## Not strictly necessary since nfs paths are also pruned,
+    ## but this may avoid some hangs when the server does not respond.
+    grep -q "PRUNEPATHS.*/gpfs " /etc/updatedb.conf || \
+        sed -i.ORIG 's|^\(PRUNEPATHS = "\)|\1/gpfs |' /etc/updatedb.conf
+
     rpm --quiet -q autofs || yum -d1 -y install autofs
 
     auto_gpfs=/etc/auto.gpfs
@@ -175,6 +180,9 @@ EOF
     ## NB need vers=3 to avoid problems with (bonded) wifi.
     case $shost in
         *-aio*) opt="  vers=3" ;;
+        ## FIXME some hosts need vers=4.0 (to avoid lsst-ss01 hangs)?
+        ## Some older autofs will reject the ".", so use "vers=4".
+        ## https://bugzilla.redhat.com/show_bug.cgi?id=1486035
         *) opt= ;;
     esac
 
