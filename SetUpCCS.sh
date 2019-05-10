@@ -328,6 +328,12 @@ rpm -q --quiet x2goclient || \
     yum -q -y install x2goclient x2goserver x2godesktopsharing
 
 
+## cron
+## We assume that you ran this script via ./ from a git checkout
+## of the script repository.
+cp -a ./ccs-sudoers-services /etc/cron.hourly/ || true
+
+
 ## grub
 ## https://github.com/sriemer/fix-linux-mouse/
 ## Prevent console spam from some common dell usb mice.
