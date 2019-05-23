@@ -413,7 +413,7 @@ EOF
 ## "To address message transfer delays we observed on the CCS cluster...
 ## [for] all nodes in running CCS applications"
 case $shost in
-    lsst-dc0[1,2,3,4,6]|lsst-ir2daq01)
+    lsst-dc0[12346]|lsst-ir2daq01)
         f=/etc/sysctl.d/99-lsst-ccs.conf
         [ -e $f ] || touch $f
         for v in net.core.{wmem,rmem}_max; do
