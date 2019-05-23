@@ -381,10 +381,20 @@ rsync -aX lsst-mcm:/etc/ssh/ssh_known_hosts_lsst /etc/ssh/ || \
 
 ### Host-specific stuff.
 
-[ $shost = lsst-ir2daq01 ] && {
-    ## FIXME interface name may vary - discover/check it?
-    f=/etc/NetworkManager/dispatcher.d/30-ethtool
-    [ -e $f ] || cat <<'EOF' > $f
+## Note, in RHEL8 we should be able to use ifcfg- files for this.
+## dc01,03,06 (lsst-daq), dc02,ir2daq01 (p3p1)
+case $shost in
+    lsst-dc0[1236]|lsst-ir2daq01)
+
+        ## TODO interface name may vary - discover/check it?
+        ## Could check for an interface connected to 192.168.100.1,
+        ## but unlikely to be specific enough.
+        iface=p3p1
+        ## Sometimes p3p1 is renamed to lsst-daq.
+        /usr/sbin/ip link show lsst-daq >& /dev/null && iface=lsst-daq
+
+        f=/etc/NetworkManager/dispatcher.d/30-ethtool
+        [ -e $f ] || cat <<'EOF' > $f
 #!/bin/sh
 
 # https://access.redhat.com/solutions/2841131
@@ -394,9 +404,15 @@ log() { logger -p user.info -t "${myname}" "$*"; }
 IFACE=$1
 ACTION=$2
 
+EOF
+
+echo "DAQ=$iface" >> $f
+
+cat <<'EOF' >> $f
+
 log "IFACE = $1, ACTION = $2"
 
-if [ "$IFACE" == "p3p1" ] && [ "$ACTION" == "up" ]; then
+if [ "$IFACE" == "$DAQ" ] && [ "$ACTION" == "up" ]; then
     log "ethool set-ring ${IFACE} rx 4096 tx 4096"
     /sbin/ethtool --set-ring ${IFACE} rx 4096 tx 4096
     log "ethool pause ${IFACE} autoneg off rx off tx off"
@@ -405,8 +421,9 @@ fi
 
 exit 0
 EOF
+        ;;
+esac
 
-}                               # ir2daq01
 
 ## FIXME how to identify which hosts need this?
 ## https://lsstc.slack.com/archives/GJXPVQWA0/p1558623946001400
