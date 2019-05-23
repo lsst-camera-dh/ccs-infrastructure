@@ -219,7 +219,7 @@ javaver=$(rpm -qi -p ${jdkrpm} | gawk '/^Version/ {print $3}';)
 javapkg=$(rpm -q -p ${jdkrpm})
 rpm --quiet -q ${javapkg} || rpm -i ${jdkrpm} > /dev/null
 java -version 2>&1 | grep -q -F ${javaver} || {
-   for cmd in java javac javaws jar jconsole ; do
+   for cmd in java javac javaws jar jconsole jstack; do
       update-alternatives --install /usr/bin/${cmd} ${cmd} \
                           /usr/java/jdk${javaver}/bin/${cmd} 1000
       update-alternatives --set ${cmd} /usr/java/jdk${javaver}/bin/${cmd}
