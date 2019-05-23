@@ -407,3 +407,19 @@ exit 0
 EOF
 
 }                               # ir2daq01
+
+## FIXME how to identify which hosts need this?
+## https://lsstc.slack.com/archives/GJXPVQWA0/p1558623946001400
+## "To address message transfer delays we observed on the CCS cluster...
+## [for] all nodes in running CCS applications"
+case $shost in
+    lsst-dc0[1,2,3,4,6]|lsst-ir2daq01)
+        f=/etc/sysctl.d/99-lsst-ccs.conf
+        [ -e $f ] || touch $f
+        for v in net.core.{wmem,rmem}_max; do
+            grep -q "$v *= *18874368" $f && continue
+            sed -i "/$v/d" $f
+            echo "$v = 18874368" >> $f
+        done
+    ;;
+esac
