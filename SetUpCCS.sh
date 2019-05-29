@@ -315,10 +315,17 @@ f=/etc/profile.d/lsst-ccs.sh
 [ -e $f ] || touch $f
 
 ## https://lsstc.slack.com/archives/CCQBHNS0K/p1553877151009500
-grep -q "OMP_NUM_THREADS" $f || \
-    cat <<EOF >> $f
+grep -q "OMP_NUM_THREADS" $f || cat <<EOF >> $f
+
 # Stop python OpenBLAS running amok.
 export OMP_NUM_THREADS=1
+EOF
+
+grep -q '/lsst/ccs/prod/bin' $f || cat <<'EOF' >> $f
+
+# Add /lsst/ccs/prod/bin to PATH if not present.
+_dir=/lsst/ccs/prod/bin
+[ -e $dir ] && [[ $PATH != *$_dir* ]] && PATH=$_dir:$PATH
 EOF
 
 
