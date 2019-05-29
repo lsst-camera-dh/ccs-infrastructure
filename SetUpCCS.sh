@@ -383,6 +383,8 @@ rsync -aX lsst-mcm:/etc/ssh/ssh_known_hosts_lsst /etc/ssh/ || \
 
 ## Note, in RHEL8 we should be able to use ifcfg- files for this.
 ## dc01,03,06 (lsst-daq), dc02,ir2daq01 (p3p1)
+## TODO Could do this if an "lsst-daq" interface exists.
+## Or we could always add the script with an "lsst-daq" name.
 case $shost in
     lsst-dc0[1236]|lsst-ir2daq01)
 
@@ -406,7 +408,8 @@ ACTION=$2
 
 EOF
 
-echo "DAQ=$iface" >> $f
+## Note: asked not to modify DAQ network interfaces.
+echo "DAQ=DISABLED-$iface" >> $f
 
 cat <<'EOF' >> $f
 
@@ -425,10 +428,12 @@ EOF
 esac
 
 
-## FIXME how to identify which hosts need this?
+## FIXME only apply to "ccs" hosts.
 ## https://lsstc.slack.com/archives/GJXPVQWA0/p1558623946001400
 ## "To address message transfer delays we observed on the CCS cluster...
 ## [for] all nodes in running CCS applications"
+## https://confluence.slac.stanford.edu/display/LSSTCAM/JGroups+Tuning+and+Performance
+## FIXME change value for daq and other hosts. Do not replace prior value.
 f=/etc/sysctl.d/99-lsst-daq-ccs.conf
 [ -e $f ] || touch $f
 for v in net.core.{wmem,rmem}_max; do
