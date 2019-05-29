@@ -337,6 +337,76 @@ _dir=/lsst/ccs/prod/bin
 EOF
 
 
+## Applications menu.
+
+f=/etc/xdg/menus/applications-merged/lsst.menu
+mkdir -p ${f%/*}
+[ -e $f ] || cat <<'EOF' > $f
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+"http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
+<Menu>
+<Name>Applications</Name>
+<Menu>
+<Name>LSST</Name>
+<Directory>lsst.directory</Directory>
+<Include>
+<Category>LSST</Category>
+</Include>
+</Menu>
+</Menu>
+EOF
+
+f=/usr/share/desktop-directories/lsst.directory
+mkdir -p ${f%/*}
+[ -e $f ] || cat <<'EOF' > $f
+[Desktop Entry]
+Type=Directory
+Name=LSST
+Icon=lsst_appicon
+EOF
+
+d=/usr/share/applications
+mkdir -p $d
+for f in console.{prod,dev} shell.{prod,dev}; do
+
+    t=${f#*.}                   # prod or dev
+
+    app=${f%.*}                 # console or shell
+
+    f=lsst.ccs.$f.desktop
+
+    [ -e $d/$f ] && continue
+
+    case $t in
+        prod) ver="production" ;;
+        dev) ver="development" ;;
+    esac
+
+    case $app in
+        console) terminal=false ;;
+        shell) terminal=true ;;
+    esac
+
+    cat <<EOF > $d/$f
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=CCS $app ($t)
+Comment=Camera Control System $app ($ver version)
+Exec=/lsst/ccs/$t/bin/ccs-$app
+Categories=LSST;
+Terminal=$terminal
+Icon=lsst_appicon
+EOF
+done
+
+
+## FIXME not a great icon.
+f=/usr/share/icons/lsst_appicon.png
+mkdir -p ${f%/*}
+[ -e $f ] || cp ./lsst_appicon.png $f
+
+
 ## EPEL
 ## TODO graphical hosts only.
 rpm -q --quiet x2goclient || \
