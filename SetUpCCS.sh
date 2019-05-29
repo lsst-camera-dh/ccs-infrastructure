@@ -314,6 +314,14 @@ f=/etc/profile.d/lsst-ccs.sh
 
 [ -e $f ] || touch $f
 
+# Add to start.
+grep -q 'UID -gt 1000' $f || {
+    cat - $f <<'EOF' >| $f.temp
+[ $UID -ge 1000 ] || return
+EOF
+    mv -f $f.temp $f
+}
+
 ## https://lsstc.slack.com/archives/CCQBHNS0K/p1553877151009500
 grep -q "OMP_NUM_THREADS" $f || cat <<EOF >> $f
 
