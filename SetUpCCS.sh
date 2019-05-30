@@ -432,7 +432,12 @@ grep -q usbhid.quirks $f || {
 
 grubfile=/boot/efi/EFI/centos/grub.cfg
 
-[ -e $grubfile ] || grubfile=/boot/grub2/grub.cfg
+if [ -e $grubfile ]; then
+    efiflag=t
+else
+    efiflag=
+    grubfile=/boot/grub2/grub.cfg
+fi
 
 [ "$grub_ok" ] || grub2-mkconfig -o $grubfile
 
@@ -527,3 +532,38 @@ for v in net.core.{wmem,rmem}_max; do
     echo "$v = 18874368" >> $f
 done
 
+
+## Graphics drivers.
+
+## TODO better detection method.
+case $shost in
+    lsst-vw01|lsst-it01) nvidia=t ;;
+    *) nvidia= ;;
+esac
+
+[ "$nvidia" ] && {
+
+    ## This takes care of the /etc/kernel/postinst.d/ part,
+    ## so long as the nvidia driver is installed with the dkms option.
+    rpm --quiet -q dkms || yum -q -y install dkms
+
+    f=/etc/modprobe.d/disable-nouveau.conf
+    [ -s $f ] || cat <<EOF > $f
+blacklist nouveau
+options nouveau modeset=0
+EOF
+
+    grep -q "rdblacklist=nouveau" /etc/default/grub || {
+        sed -i -e '/^GRUB_CMDLINE_LINUX=/ s/"$/ rdblacklist=nouveau"/' \
+            /etc/default/grub
+        grub2-mkconfig -o $grubfile
+    }
+
+    dracut -f
+
+    ## TODO actually install the driver if possible.
+
+}                               # $nvidia
+
+
+exit 0
