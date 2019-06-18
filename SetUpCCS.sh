@@ -28,9 +28,11 @@ yum group list installed | grep -qi "GNOME Desktop" || {
     yum clean all
 }
 
-for f in git emacs; do
+for f in git emacs chrony; do
     rpm --quiet -q $f || yum -q -y install $f
 done
+
+systemctl disable chronyd       # slac uses ntpd
 
 #------------------------------------------------------------------------------
 #-- group and user for ccs
