@@ -182,11 +182,14 @@ EOF
     ## NB need vers=3 to avoid problems with (bonded) wifi.
     case $shost in
         *-aio*) opt="  vers=3" ;;
-        ## FIXME some hosts need vers=4.0 (to avoid lsst-ss01 hangs)?
+        ## Some hosts need vers=4.0 (to avoid lsst-ss01 hangs)?
         ## Some older autofs will reject the ".", so use "vers=4".
         ## https://bugzilla.redhat.com/show_bug.cgi?id=1486035
         *) opt= ;;
     esac
+
+    ## 201916: Avoid Ganesha nfsv4 lease bug. SLAC INC0239891.
+    opt="  vers=3"
 
     grep -q $auto_gpfs $gpfs_autofs || \
         echo "/-	${auto_gpfs}${opt}" >> $gpfs_autofs
