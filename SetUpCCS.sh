@@ -267,6 +267,50 @@ systemctl status firewalld | grep -q 'Loaded: masked' || \
     systemctl mask --now firewalld
 
 
+## Fail2ban
+rpm --quiet -q fail2ban || yum -d1 -y install fail2ban
+
+## For now, disable.
+systemctl status fail2ban | grep -q 'Loaded: masked' || \
+    systemctl mask --now fail2ban
+
+## Whitelist all SLAC ips.
+f=/etc/fail2ban/jail.d/10-lsst-ccs.conf
+[ -e $f ] || cat <<'EOF' > $f
+[DEFAULT]
+ignoreip = 127.0.0.1/8 134.79.0.0/16
+
+# 1w.
+bantime = 604800
+
+# maxretry failures in findtime seconds.
+findtime  = 3600
+
+maxretry = 10
+
+[sshd]
+
+enabled = true
+EOF
+
+## SLAC logs to /var/log/everything instead of /var/log/secure.
+f=/etc/fail2ban/paths-overrides.local
+[ -e /var/log/everything ] && [ ! -e $f ] && cat <<'EOF' > $f
+[DEFAULT]
+
+syslog_authpriv = /var/log/everything
+
+syslog_user =  /var/log/everything
+
+syslog_ftp  = /var/log/everything
+
+syslog_daemon  = /var/log/everything
+
+syslog_local0  = /var/log/everything
+
+EOF
+
+
 #------------------------------------------------------------------------------
 #- ccs update-k5login
 [ -d ~ccs/crontabs ] || mkdir ~ccs/crontabs
