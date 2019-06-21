@@ -342,6 +342,11 @@ _dir=/lsst/ccs/prod/bin
 EOF
 
 
+## Make permissions like /tmp.
+## TODO improve partitioning scheme.
+[ -d /scratch ] && grep -q "/scratch " /etc/mtab && chmod 1777 /scratch
+
+
 ## Applications menu.
 
 f=/etc/xdg/menus/applications-merged/lsst.menu
