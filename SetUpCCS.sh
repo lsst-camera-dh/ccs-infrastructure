@@ -245,12 +245,28 @@ rpm --quiet -q gdm && {
 setenforce 0
 grep -q "SELINUX=enforcing" /etc/selinux/config && \
     sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
-#------------------------------------------------------------------------------
-#- firewalld
-rpm --quiet -q firewalld && {
-    systemctl status firewalld | grep -q 'Loaded: masked' || \
-        systemctl mask --now firewalld
-}
+
+## Firewalld
+rpm --quiet -q firewalld || yum -d1 -y install firewalld
+
+## Allow all SLAC traffic.
+## Note that public hosts should also allow ssh from anywhere.
+## TODO we might want to be more restrictive, eg 134.79.209.0/24.
+## TODO what about things like DAQ, PTP etc on private subnets?
+f=/etc/firewalld/zones/trusted.xml
+[ -e $f ] || cat <<'EOF' > $f
+<?xml version="1.0" encoding="utf-8"?>
+<zone target="ACCEPT">
+  <short>Trusted</short>
+  <description>All network connections are accepted.</description>
+  <source address="134.79.0.0/16"/>
+</zone>
+EOF
+
+systemctl status firewalld | grep -q 'Loaded: masked' || \
+    systemctl mask --now firewalld
+
+
 #------------------------------------------------------------------------------
 #- ccs update-k5login
 [ -d ~ccs/crontabs ] || mkdir ~ccs/crontabs
