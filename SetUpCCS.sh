@@ -240,6 +240,9 @@ rpm --quiet -q gdm && {
     ! rpm --quiet -q gnome-initial-setup || \
         yum -q -y remove gnome-initial-setup
 }
+
+systemctl disable initial-setup-graphical initial-setup-text
+
 #------------------------------------------------------------------------------
 #- selinux
 setenforce 0
