@@ -27,24 +27,29 @@ esac
 echo "my_system = $my_system"
 
 
-timedatectl | grep -q "RTC in local TZ: yes" && {
-    echo "Setting RTC to UTC"
-    timedatectl set-local-rtc 0
-    /usr/sbin/hwclock -w        # should not be needed, but is?
-}
+[ $my_system = slac ] && {
 
-## Slow. Maybe better done separately?
-yum group list installed | grep -qi "GNOME Desktop" || {
-    echo "Installing gnome"
-    yum -q -y groups install "GNOME Desktop"
-    yum clean all
-}
+    timedatectl | grep -q "RTC in local TZ: yes" && {
+        echo "Setting RTC to UTC"
+        timedatectl set-local-rtc 0
+        /usr/sbin/hwclock -w        # should not be needed, but is?
+    }
+
+    ## Slow. Maybe better done separately?
+    ## FIXME. Also don't want this on servers.
+    yum group list installed | grep -qi "GNOME Desktop" || {
+        echo "Installing gnome"
+        yum -q -y groups install "GNOME Desktop"
+        yum clean all
+    }
+}                               # my_system = slac
 
 for f in git emacs chrony nano unzip kernel-headers kernel-devel; do
     rpm --quiet -q $f || yum -q -y install $f
 done
 
-systemctl disable chronyd       # slac uses ntpd
+## slac uses ntpd
+[ $my_system = slac ] && systemctl disable chronyd
 
 #------------------------------------------------------------------------------
 #-- group and user for ccs
@@ -111,7 +116,8 @@ grep -q "^lsstadm:x:24000.*dh" /etc/group || \
 #------------------------------------------------------------------------------
 #-- sudoers configuration
 #-- allows members of lsst-ccs unix group to run any command (and shell) as
-#   the "ccs" user
+#   the "ccs" user.
+# TODO this group does not yet exist at Tucson.
 f=/etc/sudoers.d/group-lsst-ccs
 [ -e $f ] || touch $f
 
@@ -120,42 +126,48 @@ grep -q "^%lsst-ccs ALL = (ccs) ALL" $f || \
 grep -q "^%lsst-ccs ALL = (dh) ALL" $f || \
     echo "%lsst-ccs ALL = (dh) ALL" >> $f
 
-sudoers="gmorris marshall tonyj turri"
-for u in $sudoers; do
-    f=/etc/sudoers.d/user-$u
-    [ -e $f ] && continue
-    echo "$u   ALL=ALL" > $f
-done
+[ $my_system = slac ] && {
+
+    sudoers="gmorris marshall tonyj turri"
+    for u in $sudoers; do
+        f=/etc/sudoers.d/user-$u
+        [ -e $f ] && continue
+        echo "$u   ALL=ALL" > $f
+    done
+}                               # my_system = slac
 
 #------------------------------------------------------------------------------
 
 #- get nfs set up
 #- need nfs programs
 rpm --quiet -q nfs-utils || yum -d1 -y install nfs-utils
+rpm --quiet -q autofs || yum -d1 -y install autofs
 
 #- get rid of old /lnfs/lsst mount point if in use and entry in fstab
-mount | grep -q lnfs && umount /lnfs/lsst
-[ ! -L /lnfs/lsst ] && [ -d /lnfs/lsst ] && rmdir /lnfs/lsst
-grep -q "/lnfs/lsst" /etc/fstab && sed -i -e '/\/lnfs\/lsst/d' /etc/fstab
+[ $my_system = slac ] && {
+
+    mount | grep -q lnfs && umount /lnfs/lsst
+    [ ! -L /lnfs/lsst ] && [ -d /lnfs/lsst ] && rmdir /lnfs/lsst
+    grep -q "/lnfs/lsst" /etc/fstab && sed -i -e '/\/lnfs\/lsst/d' /etc/fstab
+}
 
 
 ### Mount the fs[123] gpfs file systems via NFS, if needed.
+[ $my_system = slac ] && {
 
-native_gpfs=
-grep -q "^lsst-fs[123].*gpfs" /etc/fstab && native_gpfs=t
+    native_gpfs=
+    grep -q "^lsst-fs[123].*gpfs" /etc/fstab && native_gpfs=t
 
-[ "$native_gpfs" ] || {
+    [ "$native_gpfs" ] || {
 
-    ## Not strictly necessary since nfs paths are also pruned,
-    ## but this may avoid some hangs when the server does not respond.
-    grep -q "PRUNEPATHS.*/gpfs " /etc/updatedb.conf || \
-        sed -i.ORIG 's|^\(PRUNEPATHS = "\)|\1/gpfs |' /etc/updatedb.conf
+        ## Not strictly necessary since nfs paths are also pruned,
+        ## but this may avoid some hangs when the server does not respond.
+        grep -q "PRUNEPATHS.*/gpfs " /etc/updatedb.conf || \
+            sed -i.ORIG 's|^\(PRUNEPATHS = "\)|\1/gpfs |' /etc/updatedb.conf
 
-    rpm --quiet -q autofs || yum -d1 -y install autofs
+        auto_gpfs=/etc/auto.gpfs
 
-    auto_gpfs=/etc/auto.gpfs
-
-    [ -e $auto_gpfs ] || cat <<EOF > $auto_gpfs
+        [ -e $auto_gpfs ] || cat <<EOF > $auto_gpfs
 #
 # This is an automounter map and it has the following format
 # key [ -mount-options-separated-by-comma ] location
@@ -163,75 +175,86 @@ grep -q "^lsst-fs[123].*gpfs" /etc/fstab && native_gpfs=t
 
 EOF
 
-    ## It would be nicer to only use eg "fs1" (rather than "fs1/g"),
-    ## but it seems as if the server is not set up to allow that.
-    ## (Maybe this is an nfs3 issue?)
-    for f in fs1/g fs2/u1 fs3/g; do
+        ## It would be nicer to only use eg "fs1" (rather than "fs1/g"),
+        ## but it seems as if the server is not set up to allow that.
+        ## (Maybe this is an nfs3 issue?)
+        for f in fs1/g fs2/u1 fs3/g; do
 
-        h=lsst-ss01
+            h=lsst-ss01
 
-        case $f in
-            fs3*) h=lsst-ss02 ;;    # note different host for this one
+            case $f in
+                fs3*) h=lsst-ss02 ;;    # note different host for this one
+            esac
+
+            f=/gpfs/slac/lsst/$f
+
+            mount | grep -q $f && umount $f
+
+            mkdir -p ${f%/*}
+
+            grep -q "^$f" $auto_gpfs && continue
+
+            printf "%-30s %s\n" "$f" "$h.slac.stanford.edu:&" >> $auto_gpfs
+
+        done
+
+
+        gpfs_autofs=/etc/auto.master.d/gpfs.autofs
+
+        [ -e $gpfs_autofs ] || touch $gpfs_autofs
+
+        ## NB need vers=3 to avoid problems with (bonded) wifi.
+        case $shost in
+            *-aio*) opt="  vers=3" ;;
+            ## Some hosts need vers=4.0 (to avoid lsst-ss01 hangs)?
+            ## Some older autofs will reject the ".", so use "vers=4".
+            ## https://bugzilla.redhat.com/show_bug.cgi?id=1486035
+            *) opt= ;;
         esac
 
-        f=/gpfs/slac/lsst/$f
+        ## 201916: Avoid Ganesha nfsv4 lease bug. SLAC INC0239891.
+        opt="  vers=3"
 
-        mount | grep -q $f && umount $f
-
-        mkdir -p ${f%/*}
-
-        grep -q "^$f" $auto_gpfs && continue
-
-        printf "%-30s %s\n" "$f" "$h.slac.stanford.edu:&" >> $auto_gpfs
-
-    done
+        grep -q $auto_gpfs $gpfs_autofs || \
+            echo "/-	${auto_gpfs}${opt}" >> $gpfs_autofs
 
 
-    gpfs_autofs=/etc/auto.master.d/gpfs.autofs
-
-    [ -e $gpfs_autofs ] || touch $gpfs_autofs
-
-    ## NB need vers=3 to avoid problems with (bonded) wifi.
-    case $shost in
-        *-aio*) opt="  vers=3" ;;
-        ## Some hosts need vers=4.0 (to avoid lsst-ss01 hangs)?
-        ## Some older autofs will reject the ".", so use "vers=4".
-        ## https://bugzilla.redhat.com/show_bug.cgi?id=1486035
-        *) opt= ;;
-    esac
-
-    ## 201916: Avoid Ganesha nfsv4 lease bug. SLAC INC0239891.
-    opt="  vers=3"
-
-    grep -q $auto_gpfs $gpfs_autofs || \
-        echo "/-	${auto_gpfs}${opt}" >> $gpfs_autofs
+        ## Remove "sss" so as to avoid a bunch of SLAC NFS that we don't want.
+        ## FIXME "Generated by Chef. Local modifications will be overwritten."
+        sed -i.ORIG 's/^automount:.*/automount:	files/' /etc/nsswitch.conf
 
 
-    ## Remove "sss" so as to avoid a bunch of SLAC NFS that we don't want.
-    ## FIXME "Generated by Chef. Local modifications will be overwritten."
-    sed -i.ORIG 's/^automount:.*/automount:	files/' /etc/nsswitch.conf
+        systemctl -q is-enabled autofs || systemctl enable autofs
+        ## TODO only if necessary, ie if not running or we changed something.
+        systemctl restart autofs
 
+    }                           # native_gpfs
 
-    systemctl -q is-enabled autofs || systemctl enable autofs
-    ## TODO only if necessary, ie if not running or we changed something.
-    systemctl restart autofs
+    #- fix up so old /lnfs path still works
+    [ -d /lnfs ] || mkdir /lnfs
+    [ -L /lnfs/lsst ] || ln -s /gpfs/slac/lsst/fs2/u1 /lnfs/lsst
 
-}                               # native_gpfs
+    #- dh software is in NFS
+    [ -h /lsst/dh ] || ln -s /lnfs/lsst/dh /lsst/dh
+    [ -h /lsst/data ] || ln -s /lnfs/lsst/data /lsst/data
+}                               # my_system = slac
 
-
-#- fix up so old /lnfs path still works
-[ -d /lnfs ] || mkdir /lnfs
-[ -L /lnfs/lsst ] || ln -s /gpfs/slac/lsst/fs2/u1 /lnfs/lsst
-
-
-#------------------------------------------------------------------------------
-#- dh software is in NFS
-[ -h /lsst/dh ] || ln -s /lnfs/lsst/dh /lsst/dh
-[ -h /lsst/data ] || ln -s /lnfs/lsst/data /lsst/data
 
 #------------------------------------------------------------------------------
 #- install the correct java from nfs
-jdkrpm=/lnfs/lsst/pkgarchive/jdk-8u112-linux-x64.rpm
+
+if [ $my_system = slac ]; then
+    jdkrpm=/lnfs/lsst/pkgarchive/jdk-8u112-linux-x64.rpm
+else
+    ## FIXME
+    jdkrpm=/root/jdk-8u112-linux-x64.rpm
+fi
+
+[ -e $jdkrpm ] || {
+    echo "missing jdkrpm: $jdkrpm"
+    exit 1
+}
+
 javaver=$(rpm -qi -p ${jdkrpm} | gawk '/^Version/ {print $3}';)
 javapkg=$(rpm -q -p ${jdkrpm})
 rpm --quiet -q ${javapkg} || rpm -i ${jdkrpm} > /dev/null
@@ -257,19 +280,21 @@ systemctl disable initial-setup-graphical initial-setup-text
 
 #------------------------------------------------------------------------------
 #- selinux
-setenforce 0
-grep -q "SELINUX=enforcing" /etc/selinux/config && \
-    sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
+[ $my_system = slac ] && {
 
-## Firewalld
-rpm --quiet -q firewalld || yum -d1 -y install firewalld
+    setenforce 0
+    grep -q "SELINUX=enforcing" /etc/selinux/config && \
+        sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
 
-## Allow all SLAC traffic.
-## Note that public hosts should also allow ssh from anywhere.
-## TODO we might want to be more restrictive, eg 134.79.209.0/24.
-## TODO what about things like DAQ, PTP etc on private subnets?
-f=/etc/firewalld/zones/trusted.xml
-[ -e $f ] || cat <<'EOF' > $f
+    ## Firewalld
+    rpm --quiet -q firewalld || yum -d1 -y install firewalld
+
+    ## Allow all SLAC traffic.
+    ## Note that public hosts should also allow ssh from anywhere.
+    ## TODO we might want to be more restrictive, eg 134.79.209.0/24.
+    ## TODO what about things like DAQ, PTP etc on private subnets?
+    f=/etc/firewalld/zones/trusted.xml
+    [ -e $f ] || cat <<'EOF' > $f
 <?xml version="1.0" encoding="utf-8"?>
 <zone target="ACCEPT">
   <short>Trusted</short>
@@ -278,20 +303,20 @@ f=/etc/firewalld/zones/trusted.xml
 </zone>
 EOF
 
-systemctl status firewalld | grep -q 'Loaded: masked' || \
-    systemctl mask --now firewalld
+    systemctl status firewalld | grep -q 'Loaded: masked' || \
+        systemctl mask --now firewalld
 
 
-## Fail2ban
-rpm --quiet -q fail2ban || yum -d1 -y install fail2ban
+    ## Fail2ban
+    rpm --quiet -q fail2ban || yum -d1 -y install fail2ban
 
-## For now, disable.
-systemctl status fail2ban | grep -q 'Loaded: masked' || \
-    systemctl mask --now fail2ban
+    ## For now, disable.
+    systemctl status fail2ban | grep -q 'Loaded: masked' || \
+        systemctl mask --now fail2ban
 
-## Whitelist all SLAC ips.
-f=/etc/fail2ban/jail.d/10-lsst-ccs.conf
-[ -e $f ] || cat <<'EOF' > $f
+    ## Whitelist all SLAC ips.
+    f=/etc/fail2ban/jail.d/10-lsst-ccs.conf
+    [ -e $f ] || cat <<'EOF' > $f
 [DEFAULT]
 ignoreip = 127.0.0.1/8 134.79.0.0/16
 
@@ -309,8 +334,8 @@ enabled = true
 EOF
 
 ## SLAC logs to /var/log/everything instead of /var/log/secure.
-f=/etc/fail2ban/paths-overrides.local
-[ -e /var/log/everything ] && [ ! -e $f ] && cat <<'EOF' > $f
+    f=/etc/fail2ban/paths-overrides.local
+    [ -e /var/log/everything ] && [ ! -e $f ] && cat <<'EOF' > $f
 [DEFAULT]
 
 syslog_authpriv = /var/log/everything
@@ -325,14 +350,19 @@ syslog_local0  = /var/log/everything
 
 EOF
 
+}                               # my_system = slac
+
 
 #------------------------------------------------------------------------------
 #- ccs update-k5login
-[ -d ~ccs/crontabs ] || mkdir ~ccs/crontabs
 
-f=~ccs/crontabs/update-k5login
-if [ ! -e $f ] || [ ! -x $f ] ; then
-   cat <<EOF >>$f
+[ $my_system = slac ] && {
+
+    [ -d ~ccs/crontabs ] || mkdir ~ccs/crontabs
+
+    f=~ccs/crontabs/update-k5login
+    if [ ! -e $f ] || [ ! -x $f ] ; then
+        cat <<EOF >>$f
 #!/bin/bash
 getent netgroup u-lsst-ccs |
  sed -e 's/(-,//g' |\
@@ -343,16 +373,15 @@ getent netgroup u-lsst-ccs |
 rsync --checksum /tmp/.k5login ~
 
 EOF
-   chown -R ccs:ccs ~ccs/crontabs
+        chown -R ccs:ccs ~ccs/crontabs
 fi
-[ -x $f ] || chmod +x $f
-#- run update-k5login
-sudo -u ccs $f
-#- update the crontab file if needed
-crontab -u ccs -l >& /dev/null | grep -q update-k5login || \
-echo "0,15,30,45 * * * * $f" | crontab -u ccs -
-#------------------------------------------------------------------------------
-#
+    [ -x $f ] || chmod +x $f
+    #- run update-k5login
+    sudo -u ccs $f
+    #- update the crontab file if needed
+    crontab -u ccs -l >& /dev/null | grep -q update-k5login || \
+        echo "0,15,30,45 * * * * $f" | crontab -u ccs -
+}                               # my_system = slac
 
 ## Files required for CCS software.
 ## https://jira.slac.stanford.edu/browse/LSSTIR-40
@@ -360,14 +389,17 @@ echo "0,15,30,45 * * * * $f" | crontab -u ccs -
 rpm --quiet -q rsync || yum -d1 -y install rsync
 
 ccs_scripts=~ccs/scripts
-ccs_scripts_src=lsst-mcm:scripts
+#ccs_scripts_src=lsst-mcm:scripts
+## Now added to the repository with this script.
+ccs_scripts_src=install
 
 ## NB prevent prompts about host keys.
 export RSYNC_RSH="ssh -o StrictHostKeyChecking=no -oBatchMode=yes"
 
 [ -e $ccs_scripts/installCCS.sh ] || {
 
-    rsync -aSH ccs@$ccs_scripts_src/ $ccs_scripts/
+#    rsync -aSH ccs@$ccs_scripts_src/ $ccs_scripts/
+    rsync -aSH $ccs_scripts_src/ $ccs_scripts/
     chown -R ccs:ccs $ccs_scripts
 }
 
@@ -493,9 +525,11 @@ mkdir -p ${f%/*}
 
 
 ## EPEL
-## TODO graphical hosts only.
-rpm -q --quiet x2goclient || \
-    yum -q -y install x2goclient x2goserver x2godesktopsharing
+## FIXME graphical hosts only.
+rpm --quiet -q gdm && {
+    rpm -q --quiet x2goclient || \
+        yum -q -y install x2goclient x2goserver x2godesktopsharing
+}
 
 
 ## cron
@@ -507,51 +541,56 @@ cp -a ./ccs-sudoers-services /etc/cron.hourly/ || true
 ## grub
 ## https://github.com/sriemer/fix-linux-mouse/
 ## Prevent console spam from some common dell usb mice.
-f=/etc/default/grub
-grub_ok=t
-grep -q usbhid.quirks $f || {
-    grub_ok=
-    sed -i.ORIG -e '/^GRUB_CMDLINE_LINUX=/ s/"$/ usbhid.quirks=0x413c:0x301a:0x00000400,0x04ca:0x0061:0x00000400"/' \
-    $f
-}
+[ $my_system = slac ] && {
 
-grubfile=/boot/efi/EFI/centos/grub.cfg
+    f=/etc/default/grub
+    grub_ok=t
+    grep -q usbhid.quirks $f || {
+        grub_ok=
+        sed -i.ORIG -e '/^GRUB_CMDLINE_LINUX=/ s/"$/ usbhid.quirks=0x413c:0x301a:0x00000400,0x04ca:0x0061:0x00000400"/' \
+            $f
+    }
 
-if [ -e $grubfile ]; then
-    efiflag=t
-else
-    efiflag=
-    grubfile=/boot/grub2/grub.cfg
-fi
+    grubfile=/boot/efi/EFI/centos/grub.cfg
 
-[ "$grub_ok" ] || grub2-mkconfig -o $grubfile
+    if [ -e $grubfile ]; then
+        efiflag=t
+    else
+        efiflag=
+        grubfile=/boot/grub2/grub.cfg
+    fi
+
+    [ "$grub_ok" ] || grub2-mkconfig -o $grubfile
+}                               # my_system = slac
 
 
 ## ssh
-[ -d /root/.ssh ] || mkdir -m 700 /root/.ssh
+[ $my_system = slac ] && {
+    [ -d /root/.ssh ] || mkdir -m 700 /root/.ssh
 
-## chef creates this as a symlink to .public/authorized_keys,
-## presumably for afs.
-f=/root/.ssh/authorized_keys
+    ## chef creates this as a symlink to .public/authorized_keys,
+    ## presumably for afs.
+    f=/root/.ssh/authorized_keys
 
-[ -e $f ] || ( umask 077 && touch $f )
+    [ -e $f ] || ( umask 077 && touch $f )
 
-## This allows logins from hosts with the associated private key.
-grep -q "root@lsst-ss01" $f || cat >> $f <<EOF
+    ## This allows logins from hosts with the associated private key.
+    grep -q "root@lsst-ss01" $f || cat >> $f <<EOF
 #
 # GPFS cluster name: lsst-ss01.slac.stanford.edu
 from="*.slac.stanford.edu" ssh-dss AAAAB3NzaC1kc3MAAACBAJVRTAdjoR/1Sir4/caVnv5uIIYpzJvZn8U2yUWa15mNhJlKNH+x0ZBCr5YtqHCkYDWq1lk42eLUgoQn0rhJTbp4AvOO6FCrP61cMyYgJgpfv56InBvhF7aWFwhJsPAym4cQC1/7znmQfR8iM6dxA8z2yThwpUdRAXT4s4c16y0bAAAAFQDuy9XdUIOYTf0Cx4+cP5tZuTWyzQAAAIBjkkDeIAI44VdwTFzubnj5oLU9oXYahibPkTHKyFGVfp330s5+AnOFITXFULPiqCzM0/QiVqZjbWdwDClMIW4OzVbAs4zZ38bpbA08FfCXQ9t9Q2jp6sdI0iDX+ZgBkU1KuDl8uFYV+P0WPiG6nQ90+uo9FRtEuCZNehnKPMJFqgAAAIAoRslF1H+MLA471jndzHIkIGPA8bqKsGSgjSEFEsR1yTnqyVQf2PwrjtIv2PrARNaP76ekeYcYF4+Ql+88hcvfFMUejc4IUTJDQ7U8XL08CzkiG2hZfR5jXlxNoSHpISUE1eEBhYeks4HJV8JjjMyap5ccUoh40N9ezePKdrSjSQ== root@lsst-ss01.slac.stanford.edu
 
 EOF
 
-## FIXME this won't work because until we get this key we cannot login
-## to other hosts. Need a common file-system (eg nfs).
-rsync -aX lsst-mcm:.ssh/id_dsa .ssh/ || \
-    echo "Failed to copy /root/.ssh/id_dsa - push from another host"
+    ## FIXME this won't work because until we get this key we cannot login
+    ## to other hosts. Need a common file-system (eg nfs).
+    rsync -aX lsst-mcm:.ssh/id_dsa .ssh/ || \
+        echo "Failed to copy /root/.ssh/id_dsa - push from another host"
 
-## Chef manages /etc/ssh/ssh_known_hosts
-rsync -aX lsst-mcm:/etc/ssh/ssh_known_hosts_lsst /etc/ssh/ || \
-    echo "Failed to copy /etc/ssh/ssh_known_hosts_lsst - push from another host"
+    ## Chef manages /etc/ssh/ssh_known_hosts
+    rsync -aX lsst-mcm:/etc/ssh/ssh_known_hosts_lsst /etc/ssh/ || \
+        echo "Failed to copy /etc/ssh/ssh_known_hosts_lsst - push from another host"
+}                               # my_system = slac
 
 
 ### Host-specific stuff.
@@ -583,10 +622,10 @@ ACTION=$2
 
 EOF
 
-## Note: asked not to modify DAQ network interfaces.
-echo "DAQ=DISABLED-$iface" >> $f
+        ## Note: asked not to modify DAQ network interfaces.
+        echo "DAQ=DISABLED-$iface" >> $f
 
-cat <<'EOF' >> $f
+        cat <<'EOF' >> $f
 
 log "IFACE = $1, ACTION = $2"
 
