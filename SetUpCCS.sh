@@ -15,6 +15,18 @@ set -e
 
 shost=${HOSTNAME%%.*}
 
+
+my_ip=$(hostname -i)
+
+case $my_ip in
+    134.79.*) my_system=slac ;;
+    10.0.103.*) my_system=tucson ;;
+    *) echo "Unexpected ip address: $my_ip"; exit 1 ;;
+esac
+
+echo "my_system = $my_system"
+
+
 timedatectl | grep -q "RTC in local TZ: yes" && {
     echo "Setting RTC to UTC"
     timedatectl set-local-rtc 0
