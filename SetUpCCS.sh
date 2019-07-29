@@ -20,7 +20,7 @@ my_ip=$(hostname -i)
 
 case $my_ip in
     134.79.*) my_system=slac ;;
-    10.0.103.*) my_system=tucson ;;
+    10.0.103.*|140.252.*) my_system=tucson ;;
     *) echo "Unexpected ip address: $my_ip"; exit 1 ;;
 esac
 
