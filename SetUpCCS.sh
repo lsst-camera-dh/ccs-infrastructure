@@ -40,7 +40,7 @@ yum group list installed | grep -qi "GNOME Desktop" || {
     yum clean all
 }
 
-for f in git emacs chrony kernel-headers kernel-devel; do
+for f in git emacs chrony nano unzip kernel-headers kernel-devel; do
     rpm --quiet -q $f || yum -q -y install $f
 done
 
