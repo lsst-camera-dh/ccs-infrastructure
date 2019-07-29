@@ -525,9 +525,10 @@ mkdir -p ${f%/*}
 
 
 ## EPEL
+rpm --quiet -q epel-release || yum -q -y install epel-release
+
 ## FIXME graphical hosts only.
 rpm --quiet -q gdm && {
-    ## Note that this requires the epel repo, which may not be present.
     rpm -q --quiet x2goclient || \
         yum -q -y install x2goclient x2goserver x2godesktopsharing || true
 }
