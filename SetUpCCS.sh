@@ -299,6 +299,13 @@ systemctl status firewalld | grep -q 'Loaded: masked' || \
     systemctl mask --now firewalld
 
 
+rpm --quiet -q fail2ban || yum -d1 -y install fail2ban
+
+## For now, disable.
+systemctl status fail2ban | grep -q 'Loaded: masked' || \
+    systemctl mask --now fail2ban
+
+
 [ $my_system = slac ] && {
 
     ## Allow all SLAC traffic.
@@ -314,14 +321,6 @@ systemctl status firewalld | grep -q 'Loaded: masked' || \
   <source address="134.79.0.0/16"/>
 </zone>
 EOF
-
-
-    ## Fail2ban
-    rpm --quiet -q fail2ban || yum -d1 -y install fail2ban
-
-    ## For now, disable.
-    systemctl status fail2ban | grep -q 'Loaded: masked' || \
-        systemctl mask --now fail2ban
 
     ## Whitelist all SLAC ips.
     f=/etc/fail2ban/jail.d/10-lsst-ccs.conf
