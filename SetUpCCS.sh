@@ -287,16 +287,19 @@ rpm --quiet -q gdm && {
 
 systemctl disable initial-setup-graphical initial-setup-text
 
-#------------------------------------------------------------------------------
-#- selinux
+
+setenforce 0
+grep -q "SELINUX=enforcing" /etc/selinux/config && \
+    sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
+
+
+rpm --quiet -q firewalld || yum -d1 -y install firewalld
+
+systemctl status firewalld | grep -q 'Loaded: masked' || \
+    systemctl mask --now firewalld
+
+
 [ $my_system = slac ] && {
-
-    setenforce 0
-    grep -q "SELINUX=enforcing" /etc/selinux/config && \
-        sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
-
-    ## Firewalld
-    rpm --quiet -q firewalld || yum -d1 -y install firewalld
 
     ## Allow all SLAC traffic.
     ## Note that public hosts should also allow ssh from anywhere.
@@ -311,9 +314,6 @@ systemctl disable initial-setup-graphical initial-setup-text
   <source address="134.79.0.0/16"/>
 </zone>
 EOF
-
-    systemctl status firewalld | grep -q 'Loaded: masked' || \
-        systemctl mask --now firewalld
 
 
     ## Fail2ban
