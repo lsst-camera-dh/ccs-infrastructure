@@ -251,21 +251,22 @@ else
     jdkrpm=/root/jdk-8u112-linux-x64.rpm
 fi
 
-[ -e $jdkrpm ] || {
-    echo "missing jdkrpm: $jdkrpm"
-    exit 1
-}
+if [ -e $jdkrpm ]; then
 
-javaver=$(rpm -qi -p ${jdkrpm} | gawk '/^Version/ {print $3}';)
-javapkg=$(rpm -q -p ${jdkrpm})
-rpm --quiet -q ${javapkg} || rpm -i ${jdkrpm} > /dev/null
-java -version 2>&1 | grep -q -F ${javaver} || {
-   for cmd in java javac javaws jar jconsole jstack; do
-      update-alternatives --install /usr/bin/${cmd} ${cmd} \
-                          /usr/java/jdk${javaver}/bin/${cmd} 1000
-      update-alternatives --set ${cmd} /usr/java/jdk${javaver}/bin/${cmd}
-   done
-}
+    javaver=$(rpm -qi -p ${jdkrpm} | gawk '/^Version/ {print $3}';)
+    javapkg=$(rpm -q -p ${jdkrpm})
+    rpm --quiet -q ${javapkg} || rpm -i ${jdkrpm} > /dev/null
+    java -version 2>&1 | grep -q -F ${javaver} || {
+        for cmd in java javac javaws jar jconsole jstack; do
+            update-alternatives --install /usr/bin/${cmd} ${cmd} \
+                                /usr/java/jdk${javaver}/bin/${cmd} 1000
+            update-alternatives --set ${cmd} /usr/java/jdk${javaver}/bin/${cmd}
+        done
+    }
+else
+    echo "WARNING skipping missing jdkrpm: $jdkrpm"
+fi
+
 #------------------------------------------------------------------------------
 #- gdm and graphical stuff on workstations
 
