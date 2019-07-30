@@ -44,7 +44,8 @@ echo "my_system = $my_system"
     }
 }                               # my_system = slac
 
-for f in git emacs chrony nano unzip kernel-headers kernel-devel; do
+for f in epel-release git emacs chrony nano unzip \
+      kernel-headers kernel-devel clustershell; do
     rpm --quiet -q $f || yum -q -y install $f
 done
 
@@ -525,8 +526,6 @@ mkdir -p ${f%/*}
 
 
 ## EPEL
-rpm --quiet -q epel-release || yum -q -y install epel-release
-
 ## FIXME graphical hosts only.
 rpm --quiet -q gdm && {
     rpm -q --quiet x2goclient || \
