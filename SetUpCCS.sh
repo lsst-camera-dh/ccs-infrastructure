@@ -37,6 +37,9 @@ echo "my_system = $my_system"
 
     ## Slow. Maybe better done separately?
     ## FIXME. Also don't want this on servers.
+    ## Although people sometimes want to eg use vnc,
+    ## so it does end up being needed on servers too.
+    ## "Server with GUI" instead? Not much smaller.
     yum group list installed | grep -qi "GNOME Desktop" || {
         echo "Installing gnome"
         yum -q -y groups install "GNOME Desktop"
@@ -44,8 +47,10 @@ echo "my_system = $my_system"
     }
 }                               # my_system = slac
 
+# TODO: maven is only needed on "development" machines,
+# but exactly what these are is not yet defined.
 for f in epel-release git emacs chrony nano unzip \
-      kernel-headers kernel-devel clustershell; do
+      kernel-headers kernel-devel clustershell maven; do
     rpm --quiet -q $f || yum -q -y install $f
 done
 
