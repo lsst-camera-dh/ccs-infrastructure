@@ -54,6 +54,10 @@ for f in epel-release git emacs chrony nano unzip \
     rpm --quiet -q $f || yum -q -y install $f
 done
 
+# It's hard to construct this automatically.
+rpm --quiet -q clustershell && \
+    echo "REMEMBER to customize /etc/clustershell/groups.d/local.cfg"
+
 ## slac uses ntpd
 [ $my_system = slac ] && systemctl disable chronyd
 
