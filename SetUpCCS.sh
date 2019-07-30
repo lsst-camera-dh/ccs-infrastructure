@@ -100,18 +100,23 @@ grep -q "^org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" $f || \
     echo "org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" >> $f
 
 
-#------------------------------------------------------------------------------
 #- add the dh account
-grep -q "23001" /etc/passwd || \
-    /usr/sbin/adduser -c "LSST Data Handling Account" \
-                      --groups dialout --create-home --uid 23001 dh
+# This is for etraveler, only used at slac.
+[ $my_system = slac ] && {
+    grep -q "23001" /etc/passwd || \
+        /usr/sbin/adduser -c "LSST Data Handling Account" \
+                          --groups dialout --create-home --uid 23001 dh
+}
+
 
 #------------------------------------------------------------------------------
 #- add and manage the lsstadm group
 grep -q "^lsstadm:x:24000" /etc/group || groupadd --gid 24000 lsstadm
 grep -q "^lsstadm:x:24000.*ccs" /etc/group || \
     gpasswd --add ccs lsstadm >/dev/null
-grep -q "^lsstadm:x:24000.*dh" /etc/group || \
+
+grep -q "^dh:" /etc/passwd && \
+    ! grep -q "^lsstadm:x:24000.*dh" /etc/group && \
     gpasswd --add dh lsstadm >/dev/null
 
 #------------------------------------------------------------------------------
@@ -124,7 +129,9 @@ f=/etc/sudoers.d/group-lsst-ccs
 
 grep -q "^%lsst-ccs ALL = (ccs) ALL" $f || \
     echo "%lsst-ccs ALL = (ccs) ALL" >> $f
-grep -q "^%lsst-ccs ALL = (dh) ALL" $f || \
+
+grep -q "^dh:" /etc/passwd && \
+    ! grep -q "^%lsst-ccs ALL = (dh) ALL" $f && \
     echo "%lsst-ccs ALL = (dh) ALL" >> $f
 
 [ $my_system = slac ] && {
