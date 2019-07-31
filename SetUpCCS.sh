@@ -70,6 +70,16 @@ rpm --quiet -q clustershell && \
 ## slac uses ntpd
 [ $my_system = slac ] && systemctl disable chronyd
 
+
+## NB For this to work, the host IP needs to be whitelisted by Tucson IHS.
+## Check for rejections in journalctl -u postfix
+[ $my_system = tucson ] && ! grep -q "^relayhost" /etc/postfix/main.cf && {
+        cp -a /etc/postfix/main.cf /etc/postfix/main.cf.ORIG
+        echo "relayhost = mail.lsst.org" >> /etc/postfix/main.cf
+        systemctl restart postfix
+}
+
+
 #------------------------------------------------------------------------------
 #-- group and user for ccs
 #
