@@ -674,6 +674,12 @@ fi
 
 exit 0
 EOF
+
+        *-vw[0-9][0-9])
+                       grep -q ^AutomaticLogin /etc/gdm/custom.conf || \
+                           sed -i.ORIG '/^\[daemon.*/a\
+AutomaticLogin=ccs\
+AutomaticLoginEnable=true' /etc/gdm/custom.conf
         ;;
 esac
 
