@@ -69,6 +69,7 @@ rpm --quiet -q clustershell && \
 
 case $my_system in
     slac) systemctl disable chronyd ;; # slac uses ntpd
+    ## TODO: make sure clock is approximately correct first?
     tucson) systemctl -q is-enabled chronyd || systemctl enable --now chronyd
             ;;
 esac
@@ -117,15 +118,22 @@ for d in /var/log/ccs /etc/ccs; do
     esac
 done
 
-#-- etc/ccs/ccsGlobal.properties file management
+
+## TODO what should the ownership of these files be?
+## https://jira.slac.stanford.edu/browse/LSSTIR-43
+
 f=/etc/ccs/ccsGlobal.properties
 [ -e $f ] || touch $f
 grep -q "^org.lsst.ccs.level=INFO" $f || echo "org.lsst.ccs.level=INFO" >> $f
 grep -q "^org.lsst.ccs.logdir=/var/log/ccs" $f || \
     echo "org.lsst.ccs.logdir=/var/log/ccs" >> $f
-#-- etc/ccs/ccsGlobal.properties file management
+
+
 f=/etc/ccs/udp_ccs.properties
 [ -e $f ] || touch $f
+## FIXME If the system does not have an fqdn (tucson), we should use
+## the IP address here. But that is less portable if the system gets a
+## new IP.
 grep -q "^org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" $f || \
     echo "org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" >> $f
 
@@ -490,6 +498,10 @@ EOF
 ## Make permissions like /tmp.
 ## TODO improve partitioning scheme.
 [ -d /scratch ] && grep -q "/scratch " /etc/mtab && chmod 1777 /scratch
+
+
+## TODO this should be part of the user creation step.
+[ $my_system = tucson ] && chmod 755 /home/*
 
 
 ## Applications menu.
