@@ -47,6 +47,15 @@ echo "my_system = $my_system"
     }
 }                               # my_system = slac
 
+
+[ $my_system = tucson ] && {
+    timedatectl | grep -q "Time zone: UTC" || {
+        echo "Setting TZ to UTC"
+        timedatectl set-timezone UTC
+    }
+}
+
+
 # TODO: maven is only needed on "development" machines,
 # but exactly what these are is not yet defined.
 for f in epel-release git emacs chrony nano unzip \
