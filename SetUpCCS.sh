@@ -67,9 +67,11 @@ done
 rpm --quiet -q clustershell && \
     echo "REMEMBER to customize /etc/clustershell/groups.d/local.cfg"
 
-## slac uses ntpd
-[ $my_system = slac ] && systemctl disable chronyd
-
+case $my_system in
+    slac) systemctl disable chronyd ;; # slac uses ntpd
+    tucson) systemctl -q is-enabled chronyd || systemctl enable --now chronyd
+            ;;
+esac
 
 ## NB For this to work, the host IP needs to be whitelisted by Tucson IHS.
 ## Check for rejections in journalctl -u postfix
