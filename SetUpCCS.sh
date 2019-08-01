@@ -51,6 +51,7 @@ echo "my_system = $my_system"
 [ $my_system = tucson ] && {
     timedatectl | grep -q "Time zone: UTC" || {
         echo "Setting TZ to UTC"
+        ## TODO this may leave the time wrong by several hours?
         timedatectl set-timezone UTC
     }
 }
@@ -58,7 +59,7 @@ echo "my_system = $my_system"
 
 # TODO: maven is only needed on "development" machines,
 # but exactly what these are is not yet defined.
-for f in epel-release git emacs chrony nano screen sysstat unzip \
+for f in epel-release git emacs chrony nano ntp screen sysstat unzip \
       kernel-headers kernel-devel clustershell maven; do
     rpm --quiet -q $f || yum -q -y install $f
 done
@@ -67,13 +68,31 @@ done
 rpm --quiet -q clustershell && \
     echo "REMEMBER to customize /etc/clustershell/groups.d/local.cfg"
 
+## Ultimately ptp will replace this.
 case $my_system in
     slac) systemctl disable chronyd ;; # slac uses ntpd
     ## TODO: make sure clock is approximately correct first?
     ## FIXME tucson was using chrony originally, then switched some
     ## hosts to ntp.
-    tucson) systemctl -q is-enabled chronyd || systemctl enable --now chronyd
-            ;;
+    tucson)
+        ## Puppet-installed hosts at Tucson seem to use (unconfigured)
+        ## chrony, but hand-installed ones use (configured) ntp.
+        ## For consistency, use ntp.
+        systemctl disable chronyd
+        systemctl enable ntpd
+
+        if grep -q "^server 140" /etc/ntp.conf; then
+            systemctl -q is-active ntpd || systemctl start ntpd
+        else
+            cat <<EOF >> /etc/ntp.conf
+server 140.252.1.140 iburst
+server 140.252.1.141 iburst
+server 140.252.1.142 iburst
+server 140.252.32.45   # added by /sbin/dhclient-script
+EOF
+            systemctl restart ntpd
+        fi
+        ;;
 esac
 
 ## NB For this to work, the host IP needs to be whitelisted by Tucson IHS.
