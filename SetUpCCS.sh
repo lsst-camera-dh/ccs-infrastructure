@@ -70,6 +70,8 @@ rpm --quiet -q clustershell && \
 case $my_system in
     slac) systemctl disable chronyd ;; # slac uses ntpd
     ## TODO: make sure clock is approximately correct first?
+    ## FIXME tucson was using chrony originally, then switched some
+    ## hosts to ntp.
     tucson) systemctl -q is-enabled chronyd || systemctl enable --now chronyd
             ;;
 esac
@@ -577,6 +579,8 @@ mkdir -p ${f%/*}
 ## EPEL
 ## FIXME graphical hosts only.
 rpm --quiet -q gdm && {
+    ## This seems to be the smallest WM one can install.
+    rpm -q --quiet icewm || yum -q -y install icewm || true
     rpm -q --quiet x2goclient || \
         yum -q -y install x2goclient x2goserver x2godesktopsharing || true
 }
