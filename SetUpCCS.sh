@@ -699,6 +699,16 @@ EOF
 AutomaticLogin=ccs\
 AutomaticLoginEnable=true' /etc/gdm/custom.conf
         ;;
+
+        *db[0-9][0-9])
+            rpm -q --quiet mariadb-server || yum -q -y install mariadb-server
+            systemctl enable --now mariadb
+            ## Next:
+            ## (Need to decide where to put the db.)
+            ## Create empty db called called comcamdbprod;
+            ## add ccs account with all privs on that db;
+            ## localdb -u to create tables.
+        ;;
 esac
 
 
