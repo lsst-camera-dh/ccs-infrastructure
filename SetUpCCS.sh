@@ -74,10 +74,11 @@ case $my_system in
     ## TODO: make sure clock is approximately correct first?
     ## FIXME tucson was using chrony originally, then switched some
     ## hosts to ntp.
-    tucson)
+    tucson-OFF)
         ## Puppet-installed hosts at Tucson seem to use (unconfigured)
         ## chrony, but hand-installed ones use (configured) ntp.
         ## For consistency, use ntp.
+        ## TODO: Disabled for now so as not to mess with puppet...
         systemctl disable chronyd
         systemctl enable ntpd
 
