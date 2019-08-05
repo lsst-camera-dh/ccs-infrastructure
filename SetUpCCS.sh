@@ -338,6 +338,8 @@ fi
 #- gdm and graphical stuff on workstations
 
 ## FIXME restrict by hostname.
+## FIXME this test is wrong for servers if we have installed the
+## graphical stuff.
 rpm --quiet -q gdm && {
     systemctl enable gdm
     systemctl set-default graphical.target
@@ -712,22 +714,23 @@ fi
 
 exit 0
 EOF
+        ;;
 
-        *-vw[0-9][0-9])
-                       grep -q ^AutomaticLogin /etc/gdm/custom.conf || \
-                           sed -i.ORIG '/^\[daemon.*/a\
+    *-vw[0-9][0-9])
+        grep -q ^AutomaticLogin /etc/gdm/custom.conf || \
+            sed -i.ORIG '/^\[daemon.*/a\
 AutomaticLogin=ccs\
 AutomaticLoginEnable=true' /etc/gdm/custom.conf
         ;;
 
-        *db[0-9][0-9])
-            rpm -q --quiet mariadb-server || yum -q -y install mariadb-server
-            systemctl enable --now mariadb
-            ## Next:
-            ## (Need to decide where to put the db.)
-            ## Create empty db called called comcamdbprod;
-            ## add ccs account with all privs on that db;
-            ## localdb -u to create tables.
+    *db[0-9][0-9])
+        rpm -q --quiet mariadb-server || yum -q -y install mariadb-server
+        systemctl enable --now mariadb
+        ## Next:
+        ## (Need to decide where to put the db.)
+        ## Create empty db called called comcamdbprod;
+        ## add ccs account with all privs on that db;
+        ## localdb -u to create tables.
         ;;
 esac
 
