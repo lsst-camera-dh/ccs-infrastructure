@@ -743,10 +743,15 @@ esac
 ## FIXME change value for daq and other hosts. Do not replace prior value.
 f=/etc/sysctl.d/99-lsst-daq-ccs.conf
 [ -e $f ] || touch $f
+
+value=18874368
+
 for v in net.core.{wmem,rmem}_max; do
-    grep -q "$v *= *18874368" $f && continue
+    grep -q "$v *= *$value" $f && continue
     sed -i "/$v/d" $f
-    echo "$v = 18874368" >> $f
+    echo "$v = $value" >> $f
+
+    /usr/sbin/sysctl -w $v=$value
 done
 
 
