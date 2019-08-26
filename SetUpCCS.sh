@@ -59,7 +59,7 @@ echo "my_system = $my_system"
 
 # TODO: maven is only needed on "development" machines,
 # but exactly what these are is not yet defined.
-for f in epel-release git emacs chrony nano ntp screen sysstat unzip \
+for f in epel-release git rsync emacs chrony nano ntp screen sysstat unzip \
       kernel-headers kernel-devel clustershell maven; do
     rpm --quiet -q $f || yum -q -y install $f
 done
@@ -208,8 +208,8 @@ grep -q "^dh:" /etc/passwd && \
 
 #- get nfs set up
 #- need nfs programs
-rpm --quiet -q nfs-utils || yum -d1 -y install nfs-utils
-rpm --quiet -q autofs || yum -d1 -y install autofs
+rpm --quiet -q nfs-utils || yum -q -y install nfs-utils
+rpm --quiet -q autofs || yum -q -y install autofs
 
 #- get rid of old /lnfs/lsst mount point if in use and entry in fstab
 [ $my_system = slac ] && {
@@ -356,13 +356,13 @@ grep -q "SELINUX=enforcing" /etc/selinux/config && \
     sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
 
 
-rpm --quiet -q firewalld || yum -d1 -y install firewalld
+rpm --quiet -q firewalld || yum -q -y install firewalld
 
 systemctl status firewalld | grep -q 'Loaded: masked' || \
     systemctl mask --now firewalld
 
 
-rpm --quiet -q fail2ban || yum -d1 -y install fail2ban
+rpm --quiet -q fail2ban || yum -q -y install fail2ban
 
 ## For now, disable.
 systemctl status fail2ban | grep -q 'Loaded: masked' || \
@@ -457,8 +457,6 @@ fi
 ## Files required for CCS software.
 ## https://jira.slac.stanford.edu/browse/LSSTIR-40
 
-rpm --quiet -q rsync || yum -d1 -y install rsync
-
 ccs_scripts=~ccs/scripts
 #ccs_scripts_src=lsst-mcm:scripts
 ## Now added to the repository with this script.
@@ -478,8 +476,6 @@ export RSYNC_RSH="ssh -o StrictHostKeyChecking=no -oBatchMode=yes"
 ccsadm=/opt/lsst/ccsadm             # created above
 
 github=https://github.com/lsst-camera-dh
-
-rpm --quiet -q git || yum -d1 -y install git
 
 [ -e $ccsadm/release ] || \
     su ccs -c "cd $ccsadm && git clone $github/release.git"
