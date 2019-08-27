@@ -179,20 +179,24 @@ grep -q "^dh:" /etc/passwd && \
     ! grep -q "^lsstadm:x:24000.*dh" /etc/group && \
     gpasswd --add dh lsstadm >/dev/null
 
-#------------------------------------------------------------------------------
-#-- sudoers configuration
-#-- allows members of lsst-ccs unix group to run any command (and shell) as
-#   the "ccs" user.
-# TODO this group does not yet exist at Tucson.
+
+### Sudoers.
+
+## Allow members of lsst-ccs unix group to run any command as the "ccs" user.
+## At SLAC, this group is managed centrally by a netgroup.
+## TODO the Tucson policy is not yet defined.
 f=/etc/sudoers.d/group-lsst-ccs
 [ -e $f ] || touch $f
 
-grep -q "^%lsst-ccs ALL = (ccs) ALL" $f || \
-    echo "%lsst-ccs ALL = (ccs) ALL" >> $f
+sudo_opt="%lsst-ccs ALL = (ccs) ALL"
+[ $my_system = tucson ] && sudo_opt="${sudo_opt%ALL}NOPASSWD: ALL"
 
-grep -q "^dh:" /etc/passwd && \
-    ! grep -q "^%lsst-ccs ALL = (dh) ALL" $f && \
-    echo "%lsst-ccs ALL = (dh) ALL" >> $f
+grep -q "^$sudo_opt" $f || echo "$sudo_opt" >> $f
+
+grep -q "^dh:" /etc/passwd && {
+    sudo_opt="${sudo_opt/(ccs)/(dh)}"
+    grep -q "^$sudo_opt" $f || echo "$sudo_opt" >> $f
+}
 
 [ $my_system = slac ] && {
 
@@ -204,10 +208,9 @@ grep -q "^dh:" /etc/passwd && \
     done
 }                               # my_system = slac
 
-#------------------------------------------------------------------------------
 
-#- get nfs set up
-#- need nfs programs
+### NFS.
+
 rpm --quiet -q nfs-utils || yum -q -y install nfs-utils
 rpm --quiet -q autofs || yum -q -y install autofs
 
@@ -522,6 +525,10 @@ EOF
 
 
 ## TODO this should be part of the user creation step.
+## I believe changing UMASK in /etc/login.defs would change the default
+## for home creation (and nothing else?).
+## Seems like all users should be in the same group though, rather
+## than each having their own.
 [ $my_system = tucson ] && chmod 755 /home/*
 
 
