@@ -60,7 +60,7 @@ echo "my_system = $my_system"
 # TODO: maven is only needed on "development" machines,
 # but exactly what these are is not yet defined.
 for f in epel-release git rsync emacs chrony nano ntp screen sysstat unzip \
-      kernel-headers kernel-devel clustershell maven; do
+      kernel-headers kernel-devel clustershell maven monit freeipmi; do
     rpm --quiet -q $f || yum -q -y install $f
 done
 
@@ -671,6 +671,220 @@ EOF
     rsync -aX lsst-mcm:/etc/ssh/ssh_known_hosts_lsst /etc/ssh/ || \
         echo "Failed to copy /etc/ssh/ssh_known_hosts_lsst - push from another host"
 }                               # my_system = slac
+
+
+### Monit.
+
+## TODO separate script for all this, using template files?
+
+mkdir -p /var/monit             # not sure if program creates this...
+
+## Change check interval from 30s to 5m.
+sed -i.ORIG 's/^set daemon  30 /set daemon  300 /' /etc/monitrc
+
+monitd=/etc/monit.d
+
+[ -d $monitd/alert ] || {
+
+    ## TODO add another email address in case slack is down.
+    case $my_system in
+        slac)
+            mailhost=smtpunix.slac.stanford.edu
+            ## cam-ir2-computing-alerts
+            monit_addr=k2p7u7n6e7u4r2r7@lsstc.slack.com
+            ;;
+        tucson)
+            mailhost=mail.lsst.org
+            ## comcam-alerts
+            monit_addr=x7z0x9c0t2k4r1n1@lsstc.slack.com
+            ;;
+    esac
+
+    cat <<EOF >| $monitd/alert
+set mailserver $mailhost,
+               localhost
+set alert $monit_addr not on { instance, action } reminder 288
+EOF
+
+    cat <<'EOF' >> $monitd/alert
+
+set mail-format {
+  from:    Monit <monit@$HOST>
+  subject: monit alert -- $HOST $SERVICE $EVENT
+  message: $EVENT service $SERVICE
+                Date:        $DATE
+                Host:        $HOST
+                Action:      $ACTION
+                Description: $DESCRIPTION
+}
+EOF
+
+}                               # alert
+
+
+[ -d $monitd/config ] || cat <<'EOF' >| $monitd/config
+set pidfile /var/run/monit.pid
+set idfile /var/cache/monit.id
+set statefile /var/cache/monit.state
+
+set eventqueue
+    basedir /var/monit
+    slots 100
+EOF
+
+
+function monit_disks () {
+    local outfile=$1
+    local disk dname
+
+    for disk; do
+
+        case $disk in
+            /) dname=rootfs ;;
+            *) dname=${disk//\/} ;;
+        esac
+
+        ## Can also do IO rates.
+        cat <<EOF >> $outfile
+check filesystem $dname with path $disk
+     if space usage > 90% then alert
+     if inode usage > 90% then alert
+
+EOF
+    done
+    return 0
+}                               # function monit_disks
+
+case $my_system in
+    slac)
+        ## Ignoring: /boot, /scswork, /usr/vice/cache.
+        monit_disks="/ /opt /scratch /tmp /var"
+        monit_disks2=
+        ;;
+    tucson)
+        ## Could loop over lvm volumes, or /dev/mapper.
+        monit_disks="/ /home"
+        monit_disks2="/data" # eg fp01, db01
+        ;;
+esac
+
+[ -d $monitd/disks ] || monit_disks $monitd/disks $monit_disks
+
+
+[ "$monit_disks2" ] && for disk in $monit_disks2; do
+
+    grep -q "[ 	]$disk[ 	]" /etc/fstab || continue
+
+    monit_disks $monitd/disks-local $disk
+done
+
+
+## Alert if a client loses gpfs.
+## TODO add a repeat count here for reboots.
+[ "$native_gpfs" ] && [ ! -e $monitd/gpfs-exists ] && \
+    cat <<'EOF' > $monitd/gpfs-exists
+check file gpfs-fs1-exists with path /gpfs/slac/lsst/fs1/.exists
+      if does not exist then alert
+
+check file gpfs-fs2-exists with path /gpfs/slac/lsst/fs2/.exists
+      if does not exist then alert
+
+check file gpfs-fs3-exists with path /gpfs/slac/lsst/fs3/.exists
+      if does not exist then alert
+EOF
+
+
+[ $shost = lsst-it01 ] && [ ! -e $monitd/gpfs ] && \
+    cat <<'EOF' > $monitd/gpfs
+check filesystem gpfs-fs1 with path /gpfs/slac/lsst/fs1
+     if space usage > 90% then alert
+     if inode usage > 90% then alert
+
+check filesystem gpfs-fs2 with path /gpfs/slac/lsst/fs2
+     if space usage > 95% then alert
+     if inode usage > 95% then alert
+
+check filesystem gpfs-fs3 with path /gpfs/slac/lsst/fs3
+     if space usage > 90% then alert
+     if inode usage > 90% then alert
+EOF
+
+
+[ $shost = lsst-it01 ] && [ ! -e $monitd/gpfs-exists ] && \
+    cat <<'EOF' > $monitd/gpfs
+check filesystem gpfs-fs1 with path /gpfs/slac/lsst/fs1
+     if space usage > 90% then alert
+     if inode usage > 90% then alert
+
+check filesystem gpfs-fs2 with path /gpfs/slac/lsst/fs2
+     if space usage > 95% then alert
+     if inode usage > 95% then alert
+
+check filesystem gpfs-fs3 with path /gpfs/slac/lsst/fs3
+     if space usage > 90% then alert
+     if inode usage > 90% then alert
+EOF
+
+
+## TODO derive host lists from eg clustershell config?
+case $shost in
+    lsst-it01)
+        ## Excluding lions and unos, which often go up and down.
+        monit_ping="lsst-ir2daq01 lsst-ir2db01 lsst-mcm lsst-ss01 lsst-ss02 lsst-vs01 lsst-vw01 lsst-vw02 lsst-dc01 lsst-dc02 lsst-dc03 lsst-dc04 lsst-dc05 lsst-dc06 lsst-dc07 lsst-dc08 lsst-dc09 lsst-dc10"
+        monit_ping=$(printf "%s.slac.stanford.edu " $monit_ping)
+        ;;
+    comcam-fp01)
+        monit_ping="comcam-db01 comcam-dc01 comcam-mcm comcam-hcu01 comcam-hcu02 comcam-vw01"
+        ;;
+esac
+
+
+[ "$monit_ping" ] && [ ! -e $monitd/hosts ] && {
+    for ping in $monit_ping; do
+
+        cat <<EOF >> $monitd/hosts
+check host ${ping%%.*} with address $ping
+  if failed ping4 count 3 with timeout 5 seconds then alert
+
+EOF
+    done
+}                               # hosts
+
+
+[[ $shost == *-mcm ]] && [ ! -e $monitd/inlet-temp ] && {
+    cat <<'EOF' > $monitd/inlet-temp
+check program inlet-temp with path /usr/local/bin/check-inlet-temp.sh timeout 10 seconds
+  if status != 0 then alert
+EOF
+    echo "TODO: install /usr/local/bin/check-inlet-temp.sh"
+}
+
+
+## Note that the use of "per core" requires monit >= 5.26.
+## As of 2019/09, the epel7 version is 5.25.1.
+## This requires us to install a newer version in /usr/local/bin,
+## and modify the service file, but it does mean the config file can
+## be identical for all hosts.
+[ -d $monitd/system ] || cat <<'EOF' >| $monitd/system
+check system $HOST
+  if loadavg (1min) per core > 2 for 10 cycles then alert
+  if loadavg (5min) per core > 1.5 for 5 cycles then alert
+  if cpu usage > 95% for 5 cycles then alert
+  if memory usage > 75% for 3 cycles then alert
+  if swap usage > 25% for 3 cycles then alert
+  if uptime < 15 minutes then alert
+EOF
+
+
+[ -e /etc/systemd/system/monit.service ] || \
+    sed 's|/usr/bin/monit|/usr/local/bin/monit|g' \
+        /usr/lib/systemd/system/monit.service > \
+        /etc/systemd/system/monit.service
+
+systemctl -q is-enabled monit || systemctl enable monit
+
+## We can just copy the binary around.
+echo "TODO: install /usr/local/bin/monit and start service"
 
 
 ### Host-specific stuff.
