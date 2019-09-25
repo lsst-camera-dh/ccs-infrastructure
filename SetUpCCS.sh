@@ -680,6 +680,7 @@ EOF
 mkdir -p /var/monit             # not sure if program creates this...
 
 ## Change check interval from 30s to 5m.
+## TODO? add "read-only" to the allow line?
 sed -i.ORIG 's/^set daemon  30 /set daemon  300 /' /etc/monitrc
 
 monitd=/etc/monit.d
@@ -737,6 +738,8 @@ function monit_disks () {
     local outfile=$1
     local disk dname
 
+    shift
+
     for disk; do
 
         case $disk in
@@ -784,13 +787,13 @@ done
 [ "$native_gpfs" ] && [ ! -e $monitd/gpfs-exists ] && \
     cat <<'EOF' > $monitd/gpfs-exists
 check file gpfs-fs1-exists with path /gpfs/slac/lsst/fs1/.exists
-      if does not exist then alert
+      if does not exist for 3 cycles then alert
 
 check file gpfs-fs2-exists with path /gpfs/slac/lsst/fs2/.exists
-      if does not exist then alert
+      if does not exist for 3 cycles then alert
 
 check file gpfs-fs3-exists with path /gpfs/slac/lsst/fs3/.exists
-      if does not exist then alert
+      if does not exist for 3 cycles then alert
 EOF
 
 
@@ -874,6 +877,8 @@ check system $HOST
   if swap usage > 25% for 3 cycles then alert
   if uptime < 15 minutes then alert
 EOF
+## We are using uptime to detect reboots. It also alerts on success.
+## TODO try "else if succeeded exec /usr/bin/true"?
 
 
 [ -e /etc/systemd/system/monit.service ] || \
@@ -884,6 +889,9 @@ EOF
 systemctl -q is-enabled monit || systemctl enable monit
 
 ## We can just copy the binary around.
+## NB Note that we configure this monit with --prefix=/usr
+## so that it consults /etc/monitrc, and install just the binary by
+## hand in /usr/local/bin.
 echo "TODO: install /usr/local/bin/monit and start service"
 
 
