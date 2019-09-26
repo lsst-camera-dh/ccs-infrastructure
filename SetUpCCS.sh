@@ -961,6 +961,31 @@ AutomaticLoginEnable=true' /etc/gdm/custom.conf
 esac
 
 
+## Newer java version for font rescaling on big display.
+[ $shost = lsst-vw01 ] && {
+
+    jvmdir=/usr/lib/jvm         # somewhere in /usr/local better?
+    jdkver=11.0.2
+    jdktar=/root/openjdk-${jdkver}_linux-x64_bin.tar.gz # fixme
+
+    if [ -e $jdktar ]; then
+        tar -C $jvmdir -axf $jdktar
+    else
+        echo "WARNING skipping missing file: $jdktar"
+    fi
+
+    jdkccs=/etc/ccs/$jdkccs
+
+    [ -e $jdkccs ] || \
+        printf "export PATH=$jvmdir/jdk-$jdkver/bin:$PATH\n" > $jdkccs
+
+    f=/etc/ccs/ccs-console.app
+    grep -q ${jdkccs##*/} $f >& /dev/null || \
+        printf "system.pre-execute=${jdkccs##*/}\n" >> $f
+
+}                               # lsst-vw01
+
+
 ## FIXME only apply to "ccs" hosts.
 ## https://lsstc.slack.com/archives/GJXPVQWA0/p1558623946001400
 ## "To address message transfer delays we observed on the CCS cluster...
