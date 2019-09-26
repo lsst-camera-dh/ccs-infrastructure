@@ -668,8 +668,8 @@ EOF
         echo "Failed to copy /root/.ssh/id_dsa - push from another host"
 
     ## Chef manages /etc/ssh/ssh_known_hosts
-    rsync -aX lsst-mcm:/etc/ssh/ssh_known_hosts_lsst /etc/ssh/ || \
-        echo "Failed to copy /etc/ssh/ssh_known_hosts_lsst - push from another host"
+    rsync -aX lsst-mcm:/etc/ssh/ssh_known_hosts_local /etc/ssh/ || \
+        echo "Failed to copy /etc/ssh/ssh_known_hosts_local - push from another host"
 }                               # my_system = slac
 
 
