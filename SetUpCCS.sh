@@ -813,22 +813,6 @@ check filesystem gpfs-fs3 with path /gpfs/slac/lsst/fs3
 EOF
 
 
-[ $shost = lsst-it01 ] && [ ! -e $monitd/gpfs-exists ] && \
-    cat <<'EOF' > $monitd/gpfs
-check filesystem gpfs-fs1 with path /gpfs/slac/lsst/fs1
-     if space usage > 90% then alert
-     if inode usage > 90% then alert
-
-check filesystem gpfs-fs2 with path /gpfs/slac/lsst/fs2
-     if space usage > 95% then alert
-     if inode usage > 95% then alert
-
-check filesystem gpfs-fs3 with path /gpfs/slac/lsst/fs3
-     if space usage > 90% then alert
-     if inode usage > 90% then alert
-EOF
-
-
 ## TODO derive host lists from eg clustershell config?
 case $shost in
     lsst-it01)
@@ -870,10 +854,10 @@ EOF
 ## be identical for all hosts.
 [ -d $monitd/system ] || cat <<'EOF' >| $monitd/system
 check system $HOST
-  if loadavg (1min) per core > 2 for 10 cycles then alert
+  if loadavg (1min) per core > 2 for 3 cycles then alert
   if loadavg (5min) per core > 1.5 for 5 cycles then alert
-  if cpu usage > 95% for 5 cycles then alert
-  if memory usage > 75% for 3 cycles then alert
+  if cpu usage > 95% for 3 cycles then alert
+  if memory usage > 90% for 3 cycles then alert
   if swap usage > 25% for 3 cycles then alert
   if uptime < 15 minutes then alert
 EOF
