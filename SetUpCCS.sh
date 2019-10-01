@@ -60,7 +60,8 @@ echo "my_system = $my_system"
 # TODO: maven is only needed on "development" machines,
 # but exactly what these are is not yet defined.
 for f in epel-release git rsync emacs chrony nano ntp screen sysstat unzip \
-      kernel-headers kernel-devel clustershell maven monit freeipmi; do
+      kernel-headers kernel-devel clustershell maven monit freeipmi \
+      attr parallel ; do
     rpm --quiet -q $f || yum -q -y install $f
 done
 
