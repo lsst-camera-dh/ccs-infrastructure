@@ -21,12 +21,12 @@ chmod --reference=$fitsfile $fitsfile.fz
 chown --reference=$fitsfile $fitsfile.fz
 
 ## Rename new file over the original.
-ls -lh --full-time $fitsfile ${fitsfile}.fz
-mv -v ${fitsfile}.fz ${fitsfile}
+ls -lk --full-time $fitsfile $fitsfile.fz
+mv $fitsfile.fz $fitsfile
 
 ## The time-based version did not have this attr step.
 ## Set file attribute.
 ## NB: not visible over NFS; not preserved by default tar, rsync, etc.
-setfattr -n user.fpack ${fitsfile}
+setfattr -n user.fpack $fitsfile
 
 exit 0
