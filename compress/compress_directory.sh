@@ -64,15 +64,17 @@ for dir; do
         continue
     }
 
-    grep -q "^${dir}$" $compressfile && {
+    grep -q "^${dir} " $compressfile && {
         echo "Already done: $dir"
         continue
     }
 
-    grep -q "^${dir%/*}$" $compressfile && {
-        echo "Already done parent: ${dir%/*}"
+    grep -q "^${dir%/*} " $compressfile && {
+        echo "Already done parent: $dir"
         continue
     }
+
+    size0=$(du -sm "$dir" | cut -f1)
 
     ## Could replace parallel with
     ##   find ... \( -exec fpack-test.sh '{}' \; -print \) | \
@@ -83,7 +85,9 @@ for dir; do
     parallel --joblog $logjob -j 5 fpackafile_attr.sh < $logfits > $logout || \
         die "Failed processing $dir"
 
-    echo "$dir" >> $compressfile
+    size1=$(du -sm "$dir" | cut -f1)
+
+    echo "$dir $size0 $size1" >> $compressfile
 
 done
 
