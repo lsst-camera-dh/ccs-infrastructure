@@ -33,5 +33,8 @@ mv -v ${fitsfile}.fz ${fitsfile}
 # Correct group as it's getting set to ccs:ccs when compressing:
 chown ccs:lsstadm ${fitsfile}
 
-# Set file attribute cf Tony
-attr -q -s user.fpack -V true ${fitsfile}
+## Set file attribute.
+## NB: not visible over NFS; not preserved by default tar, rsync, etc.
+setfattr -n user.fpack ${fitsfile}
+
+exit 0

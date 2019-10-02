@@ -1,9 +1,7 @@
 #!/bin/bash
-for file in "$@"
-do
-a=`attr -q -g user.fpack "$file" 2>/dev/null`
-if [ "$a" != "true" ]
-then
-echo $file
-fi
+
+for file; do
+    getfattr -n user.fpack "$file" >& /dev/null && echo "$file"
 done
+
+exit 0
