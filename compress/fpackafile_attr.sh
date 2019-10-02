@@ -16,8 +16,9 @@ $FPACK $FOPTS $fitsfile || {
 }
 
 ## Reset timestamp and ownership to match the original file.
-touch -r ${fitsfile} ${fitsfile}.fz
-chown --reference=$fitsfile ${fitsfile}.fz
+touch -r $fitsfile $fitsfile.fz
+chmod --reference=$fitsfile $fitsfile.fz
+chown --reference=$fitsfile $fitsfile.fz
 
 ## Rename new file over the original.
 ls -lh --full-time $fitsfile ${fitsfile}.fz
