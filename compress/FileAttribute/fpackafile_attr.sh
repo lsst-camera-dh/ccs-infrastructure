@@ -20,18 +20,14 @@ if [[ $rt -ne 0 ]] ; then
         echo "fpack error: returned $rt"
         exit $rt
 fi
-#-reset the access and modification times to match source file
 
+## Reset timestamp and ownership to match the original file.
 touch -r ${fitsfile} ${fitsfile}.fz
-#-remove the original file and rename the new file
+chown --reference=${fitsfile} ${fitsfile}.fz
 
+## Rename new file over the original.
 ls -lh --full-time $fitsfile ${fitsfile}.fz
-#rm ${fitsfile}
-
 mv -v ${fitsfile}.fz ${fitsfile}
-
-# Correct group as it's getting set to ccs:ccs when compressing:
-chown ccs:lsstadm ${fitsfile}
 
 ## Set file attribute.
 ## NB: not visible over NFS; not preserved by default tar, rsync, etc.
