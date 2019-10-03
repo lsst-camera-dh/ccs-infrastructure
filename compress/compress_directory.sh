@@ -24,7 +24,7 @@ mkdir -p $logdir
 
 ## Record directories that we already did.
 compressfile=$logdir/compressed
-touch $compressfile
+[ -e $compressfile ] || touch $compressfile
 
 logbase=$logdir/$(date +%Y%m%d-%H%M%S)
 
