@@ -1,6 +1,6 @@
 #!/bin/bash
-
-# Compress fits files under specified directory.
+###
+### Compress fits files under specified directory.
 
 PN=${0##*/}
 
@@ -13,6 +13,7 @@ function die ()
 
 [ $USER = ccs ] || die "Run as the ccs user"
 
+##renice 19 $$ > /dev/null
 
 PATH=$HOME/ccs-infrastructure/compress:$PATH
 
@@ -82,13 +83,25 @@ for dir; do
     ### where fpack-test.sh returns 0 if file is not already compressed.
     find "$dir" -type f -name '*.fits' -exec find-fpack.sh '{}' + > $logfits
 
-    parallel --joblog $logjob -j 5 fpackafile_attr.sh < $logfits > $logout || \
+    [ -s $logfits ] || {
+        rm -f $logfits
+        continue # nothing to compress
+    }
+
+    parallel --joblog $logjob -j 8 fpackafile_attr.sh < $logfits > $logout || \
         die "Failed processing $dir"
+
+    ## If all went well there's no need to keep the list of inputs.
+    ## Perhaps it should be a temporary file?
+    rm -f $logfits
 
     size1=$(du -sm "$dir" | cut -f1)
 
     echo "$dir $size0 $size1" >> $compressfile
 
 done
+
+## Avoid leaving empty log files.
+[ -s $logfile ] || rm -f $logfile
 
 exit 0
