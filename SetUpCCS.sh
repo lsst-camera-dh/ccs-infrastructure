@@ -15,16 +15,23 @@ set -e
 
 shost=${HOSTNAME%%.*}
 
+my_system=
 
-my_ip=$(hostname -i)
+while read ip; do
+    case $ip in
+        134.79.*) my_system=slac ;;
+        140.252.*|10.0.103.*) my_system=tucson ;;
+        139.229.174.*) my_system=chile ;;
+    esac
+    [ "$my_system" ] && break
+done < <(hostname -I)
 
-case $my_ip in
-    134.79.*) my_system=slac ;;
-    10.0.103.*|140.252.*) my_system=tucson ;;
-    *) echo "Unexpected ip address: $my_ip"; exit 1 ;;
-esac
-
-echo "my_system = $my_system"
+if [ "$my_system" ]; then
+    echo "my_system = $my_system"
+else
+    echo "Unable to identify network"
+    exit 1
+fi
 
 
 [ $my_system = slac ] && {
@@ -109,6 +116,8 @@ esac
 #------------------------------------------------------------------------------
 #-- group and user for ccs
 #
+## NB if you are adding more users to the system by hand, the next one
+## will get a uid in the 23000 range if you don't do anything.
 grep -q "^ccs:x:23000" /etc/passwd || \
     /usr/sbin/adduser -c "CCS Operator Account" --groups dialout \
                       --create-home --uid 23000 ccs
