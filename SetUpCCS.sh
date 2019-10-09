@@ -104,13 +104,15 @@ EOF
         ;;
 esac
 
-## NB For this to work, the host IP needs to be whitelisted by Tucson IHS.
+### 2019/10/09: changed to dedicated user account, managed by puppet.
+### See https://jira.lsstcorp.org/browse/IHS-2831
+## For this to work, the host IP needs to be whitelisted by Tucson IHS.
 ## Check for rejections in journalctl -u postfix
-[ $my_system = tucson ] && ! grep -q "^relayhost" /etc/postfix/main.cf && {
-        cp -a /etc/postfix/main.cf /etc/postfix/main.cf.ORIG
-        echo "relayhost = mail.lsst.org" >> /etc/postfix/main.cf
-        systemctl restart postfix
-}
+### [ $my_system = tucson ] && ! grep -q "^relayhost" /etc/postfix/main.cf && {
+###         cp -a /etc/postfix/main.cf /etc/postfix/main.cf.ORIG
+###         echo "relayhost = mail.lsst.org" >> /etc/postfix/main.cf
+###         systemctl restart postfix
+### }
 
 
 #------------------------------------------------------------------------------
