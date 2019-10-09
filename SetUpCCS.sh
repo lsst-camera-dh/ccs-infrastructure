@@ -364,7 +364,7 @@ rpm --quiet -q gdm && {
 systemctl disable initial-setup-graphical initial-setup-text
 
 
-setenforce 0
+getenforce 2> /dev/null | grep -qi Enforcing && setenforce 0
 grep -q "SELINUX=enforcing" /etc/selinux/config && \
     sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
 
