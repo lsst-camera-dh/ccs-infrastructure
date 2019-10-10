@@ -773,7 +773,7 @@ case $my_system in
     slac)
         ## Ignoring: /boot, /scswork, /usr/vice/cache.
         monit_disks="/ /opt /scratch /tmp /var"
-        monit_disks2=
+        monit_disks2="/lsst-ir2db01"
         ;;
     tucson)
         ## Could loop over lvm volumes, or /dev/mapper.
