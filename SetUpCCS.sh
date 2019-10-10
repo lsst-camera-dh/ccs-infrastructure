@@ -53,7 +53,7 @@ case $my_system in
         }
         ;;
 
-    tucson)
+    tucson|chile)
         timedatectl | grep -q "Time zone: UTC" || {
             echo "Setting TZ to UTC"
             ## TODO this may leave the time wrong by several hours?
