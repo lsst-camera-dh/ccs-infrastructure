@@ -33,35 +33,34 @@ else
     exit 1
 fi
 
+case $my_system in
+    slac)
+        timedatectl | grep -q "RTC in local TZ: yes" && {
+            echo "Setting RTC to UTC"
+            timedatectl set-local-rtc 0
+            /usr/sbin/hwclock -w # should not be needed, but is?
+        }
 
-[ $my_system = slac ] && {
+        ## Slow. Maybe better done separately?
+        ## FIXME. Also don't want this on servers.
+        ## Although people sometimes want to eg use vnc,
+        ## so it does end up being needed on servers too.
+        ## "Server with GUI" instead? Not much smaller.
+        yum group list installed | grep -qi "GNOME Desktop" || {
+            echo "Installing gnome"
+            yum -q -y groups install "GNOME Desktop"
+            yum clean all
+        }
+        ;;
 
-    timedatectl | grep -q "RTC in local TZ: yes" && {
-        echo "Setting RTC to UTC"
-        timedatectl set-local-rtc 0
-        /usr/sbin/hwclock -w        # should not be needed, but is?
-    }
-
-    ## Slow. Maybe better done separately?
-    ## FIXME. Also don't want this on servers.
-    ## Although people sometimes want to eg use vnc,
-    ## so it does end up being needed on servers too.
-    ## "Server with GUI" instead? Not much smaller.
-    yum group list installed | grep -qi "GNOME Desktop" || {
-        echo "Installing gnome"
-        yum -q -y groups install "GNOME Desktop"
-        yum clean all
-    }
-}                               # my_system = slac
-
-
-[ $my_system = tucson ] && {
-    timedatectl | grep -q "Time zone: UTC" || {
-        echo "Setting TZ to UTC"
-        ## TODO this may leave the time wrong by several hours?
-        timedatectl set-timezone UTC
-    }
-}
+    tucson)
+        timedatectl | grep -q "Time zone: UTC" || {
+            echo "Setting TZ to UTC"
+            ## TODO this may leave the time wrong by several hours?
+            timedatectl set-timezone UTC
+        }
+        ;;
+esac
 
 
 # TODO: maven is only needed on "development" machines,
