@@ -118,7 +118,10 @@ esac
 #-- group and user for ccs
 #
 ## NB if you are adding more users to the system by hand, the next one
-## will get a uid in the 23000 range if you don't do anything.
+## will get a uid in the 23000 range if you don't do anything,
+## eg use useradd -K UID_MAX=22000.
+## TODO: should this be a system (uid < 1000) account?
+## Or should it be greater than UID_MAX (default 60000)?
 grep -q "^ccs:x:23000" /etc/passwd || \
     /usr/sbin/adduser -c "CCS Operator Account" --groups dialout \
                       --create-home --uid 23000 ccs
