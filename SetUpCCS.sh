@@ -866,13 +866,15 @@ EOF
 ## This requires us to install a newer version in /usr/local/bin,
 ## and modify the service file, but it does mean the config file can
 ## be identical for all hosts.
+## swap warning is not very useful, since Linux doesn't usually free swap.
+## Maybe it should just be removed?
 [ -d $monitd/system ] || cat <<'EOF' >| $monitd/system
 check system $HOST
   if loadavg (1min) per core > 2 for 3 cycles then alert
   if loadavg (5min) per core > 1.5 for 5 cycles then alert
   if cpu usage > 95% for 3 cycles then alert
   if memory usage > 90% for 3 cycles then alert
-  if swap usage > 25% for 3 cycles then alert
+  if swap usage > 75% for 3 cycles then alert
   if uptime < 15 minutes then alert
 EOF
 ## We are using uptime to detect reboots. It also alerts on success.
