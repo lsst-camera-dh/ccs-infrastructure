@@ -71,6 +71,10 @@ for f in epel-release git rsync emacs chrony nano ntp screen sysstat unzip \
     rpm --quiet -q $f || yum -q -y install $f
 done
 
+case $shost in
+    lsst-it01|*-aio*|*-vw*) yum -q -y install libreoffice-base ;;
+esac
+
 # It's hard to construct this automatically.
 rpm --quiet -q clustershell && \
     echo "REMEMBER to customize /etc/clustershell/groups.d/local.cfg"
