@@ -885,6 +885,22 @@ EOF
 ## TODO try "else if succeeded exec /usr/bin/true"?
 
 
+## The "primary" network interface, eg em1 or p4p1.
+eth0=$(nmcli -g ip4.address,general.device dev show 2> /dev/null | \
+  gawk '/^(134|140|139)/ {getline; print $0; exit}')
+
+[ "$eth0" ] || {
+    echo "WARNING: unable to determine primary network interface"
+    eth0=em1
+}
+
+[ -d $monitd/network ] || cat <<EOF >| $monitd/network
+check network $eth0 with interface $eth0
+  if changed link capacity then alert
+  if saturation > 90% for 3 cycles then alert
+EOF
+
+
 [ -e /etc/systemd/system/monit.service ] || \
     sed 's|/usr/bin/monit|/usr/local/bin/monit|g' \
         /usr/lib/systemd/system/monit.service > \
