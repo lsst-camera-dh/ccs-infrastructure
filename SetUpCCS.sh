@@ -856,12 +856,13 @@ EOF
 }                               # hosts
 
 
-[[ $shost == *-mcm ]] && [ ! -e $monitd/inlet-temp ] && {
-    cat <<'EOF' > $monitd/inlet-temp
-check program inlet-temp with path /usr/local/bin/check-inlet-temp.sh timeout 10 seconds
+[[ $shost == *-mcm ]] && {
+    [ -e $monitd/inlet-temp ] || cat <<'EOF' > $monitd/inlet-temp
+check program inlet-temp with path /usr/local/bin/monit_inlet_temp timeout 10 seconds
   if status != 0 then alert
 EOF
-    echo "TODO: install /usr/local/bin/check-inlet-temp.sh"
+
+    cp monit/monit_inlet_temp /usr/local/bin
 }
 
 
