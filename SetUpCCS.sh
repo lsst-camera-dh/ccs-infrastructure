@@ -703,7 +703,7 @@ sed -i.ORIG 's/^set daemon  30 /set daemon  300 /' /etc/monitrc
 
 monitd=/etc/monit.d
 
-[ -d $monitd/alert ] || {
+[ -e $monitd/alert ] || {
 
     ## TODO add another email address in case slack is down.
     case $my_system in
@@ -741,7 +741,7 @@ EOF
 }                               # alert
 
 
-[ -d $monitd/config ] || cat <<'EOF' >| $monitd/config
+[ -e $monitd/config ] || cat <<'EOF' >| $monitd/config
 set pidfile /var/run/monit.pid
 set idfile /var/cache/monit.id
 set statefile /var/cache/monit.state
@@ -789,7 +789,7 @@ case $my_system in
         ;;
 esac
 
-[ -d $monitd/disks ] || monit_disks $monitd/disks $monit_disks
+[ -e $monitd/disks ] || monit_disks $monitd/disks $monit_disks
 
 
 [ "$monit_disks2" ] && for disk in $monit_disks2; do
@@ -873,7 +873,7 @@ EOF
 ## be identical for all hosts.
 ## swap warning is not very useful, since Linux doesn't usually free swap.
 ## Maybe it should just be removed?
-[ -d $monitd/system ] || cat <<'EOF' >| $monitd/system
+[ -e $monitd/system ] || cat <<'EOF' >| $monitd/system
 check system $HOST
   if loadavg (1min) per core > 2 for 3 cycles then alert
   if loadavg (5min) per core > 1.5 for 5 cycles then alert
@@ -896,7 +896,7 @@ eth0=$(nmcli -g ip4.address,general.device dev show 2> /dev/null | \
 }
 
 ## TODO try to automatically fix netspeed?
-[ -d $monitd/network ] || cat <<EOF >| $monitd/network
+[ -e $monitd/network ] || cat <<EOF >| $monitd/network
 check network $eth0 with interface $eth0
   if changed link capacity then alert
   if saturation > 90% for 3 cycles then alert
