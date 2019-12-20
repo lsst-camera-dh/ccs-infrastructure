@@ -1,0 +1,36 @@
+#!/bin/bash
+
+## Check the status of hardware raid.
+## Assumes the relevant hwraid utility is installed.
+
+PATH=$PATH:/usr/local/bin
+
+raid=perccli64
+args="/c0/vall show"
+patt=RAID
+ok=Optl
+
+case ${HOSTNAME%%.*} in
+    lsst-it01) raid=storcli64 ;;
+    lsst-vw01) raid=sas3ircu ; args="0 STATUS" ; patt=state ; ok=Optimal ;;
+esac
+
+type -ap $raid >& /dev/null || {
+    echo "Cannot find raid executable: $raid"
+    exit 1
+}
+
+stat=$($raid $args 2> /dev/null | grep $patt)
+
+[ "$1" = "-p" ] && echo "$stat"
+
+[ "$stat" ] || {
+    echo "Unable to get RAID status"
+    exit 1
+}
+
+echo "$stat" | grep -qv $ok || exit 0
+
+echo "Non-optimal RAID status: $stat"
+
+exit 1

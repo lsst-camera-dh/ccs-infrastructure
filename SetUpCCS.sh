@@ -908,6 +908,20 @@ EOF
 cp monit/monit_netspeed /usr/local/bin
 
 
+case $shost in
+    *-uno*|*-lion*|*-hcu*|*-aio*|*-lt*|*-vw*) : ;;
+    *)
+        [ -e $monitd/hwraid ] || cat <<'EOF' >| $monitd/hwraid
+check program hwraid with path /usr/local/bin/monit_hwraid timeout 10 seconds
+  if status != 0 then alert
+EOF
+
+        ## Needs the raid utility (eg perccli64) to be installed separately.
+        cp monit/monit_hwraid /usr/local/bin
+    ;;
+esac
+
+
 [ -e /etc/systemd/system/monit.service ] || \
     sed 's|/usr/bin/monit|/usr/local/bin/monit|g' \
         /usr/lib/systemd/system/monit.service > \
