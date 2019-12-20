@@ -1,0 +1,36 @@
+#!/bin/bash
+
+## monit's inbuilt network checks will tell us if a link changes speed,
+## but not if it comes up as slow right from boot.
+
+PATH=$PATH:/usr/sbin
+
+## "primary" network interface.
+eth0=$(nmcli -g ip4.address,general.device dev show 2> /dev/null | \
+  gawk '/^(134|140|139)/ {getline; print $0; exit}')
+
+[ "$eth0" ] || {
+    echo "$HOSTNAME: Unable to determine primary network interface"
+    exit 1
+}
+
+speed=$(ethtool $eth0 2> /dev/null | sed -n 's/.*Speed: *\([0-9]*\).*/\1/p')
+
+case $speed in
+    ""|*[^0-9]*) echo "Non-integer speed: $speed" ; exit 1 ;;
+esac
+
+expected=1000
+case ${HOSTNAME%%.*} in
+    lsst-ss02|*-vs0[0-9]) expected=40000 ;;
+    lsst-it0[0-9]|*d[bc][0-9][0-9]|*-fp0[0-9]|*daq0[0-9]|*-mcm|lsst-ss01) expected=10000 ;;
+esac
+
+[ "$1" = "-p" ] && \
+    echo "Interface = $eth0, speed = $speed, expected = $expected"
+
+[ $speed -ge $expected ] && exit 0
+
+echo "Speed is low: $speed < $expected"
+
+exit 1

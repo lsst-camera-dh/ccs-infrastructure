@@ -894,11 +894,17 @@ eth0=$(nmcli -g ip4.address,general.device dev show 2> /dev/null | \
     eth0=em1
 }
 
+## TODO try to automatically fix netspeed?
 [ -d $monitd/network ] || cat <<EOF >| $monitd/network
 check network $eth0 with interface $eth0
   if changed link capacity then alert
   if saturation > 90% for 3 cycles then alert
+
+check program netspeed with path /usr/local/bin/monit_netspeed timeout 10 seconds
+  if status != 0 then alert
 EOF
+
+cp monit/monit_netspeed /usr/local/bin
 
 
 [ -e /etc/systemd/system/monit.service ] || \
