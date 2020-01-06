@@ -67,7 +67,7 @@ esac
 # but exactly what these are is not yet defined.
 for f in epel-release git rsync emacs chrony nano ntp screen sysstat unzip \
       kernel-headers kernel-devel clustershell maven monit freeipmi \
-      attr parallel gcc; do
+      attr parallel gcc devtoolset-8; do
     rpm --quiet -q $f || yum -q -y install $f
 done
 
