@@ -10,6 +10,9 @@ eth0=$(nmcli -g ip4.address,general.device dev show 2> /dev/null | \
   gawk '/^(134|140|139)/ {getline; print $0; exit}')
 
 [ "$eth0" ] || {
+    read uptime idle < /proc/uptime
+    ## Avoid bogus warnings right after reboot.
+    [ ${uptime%%.*} -lt 180 ] && exit 0
     echo "$HOSTNAME: Unable to determine primary network interface"
     exit 1
 }
