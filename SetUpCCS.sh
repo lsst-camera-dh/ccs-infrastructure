@@ -365,7 +365,7 @@ rpm --quiet -q gdm && {
     systemctl enable gdm
     systemctl get-default | grep -qF graphical.target || \
         systemctl set-default graphical.target
-    ! rpm --quiet -q gnome-initial-setup || \
+    rpm --quiet -q gnome-initial-setup && \
         yum -q -y remove gnome-initial-setup
 }
 
