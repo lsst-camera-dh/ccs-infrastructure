@@ -839,7 +839,7 @@ case $shost in
         monit_ping=$(printf "%s.slac.stanford.edu " $monit_ping)
         ;;
     comcam-fp01)
-        monit_ping="comcam-db01 comcam-dc01 comcam-mcm comcam-hcu01 comcam-hcu02 comcam-vw01"
+        monit_ping="comcam-db01 comcam-dc01 comcam-mcm comcam-vw01 comcam-hcu03 comcam-lion01 comcam-lion02 comcam-lion03 pathfinder-lion01"
         ;;
 esac
 
