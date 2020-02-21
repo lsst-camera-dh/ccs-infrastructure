@@ -778,9 +778,12 @@ EOF
 
 case $my_system in
     slac)
-        ## Ignoring: /boot, /scswork, /usr/vice/cache.
-        monit_disks="/ /opt /scratch /tmp /var"
-        monit_disks2="/lsst-ir2db01 /data" # /data on dc
+        ## Ignoring: /boot, and in older installs: /scswork, /usr/vice/cache.
+        monit_disks="/ /tmp"
+        ## dc nodes have /data.
+        ## Older installs have separate /opt /scratch /var.
+        ## Newer ones have /home instead.
+        monit_disks2="/lsst-ir2db01 /data /home /opt /scratch /var"
         ;;
     tucson)
         ## Could loop over lvm volumes, or /dev/mapper.
