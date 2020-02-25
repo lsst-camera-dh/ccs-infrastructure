@@ -1006,6 +1006,11 @@ AutomaticLoginEnable=true' /etc/gdm/custom.conf
     *fcs[0-9][0-9]|lsst-lion18)
         ./lion_canbus/setup
         ;;
+
+    ## FIXME what are the right hosts for this?
+    lsst-lion09|lsst-lion1[05])
+        ./lion_vldrive/setup
+        ;;
 esac
 
 

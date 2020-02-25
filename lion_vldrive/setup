@@ -1,0 +1,57 @@
+#!/bin/bash
+
+## Setup the vldrive modules on a lion host.
+## This script must be called with a full filename (ie not via PATH)
+## so that it can find its auxiliary files.
+
+srcdir=${0%/*}
+
+[ -e $srcdir/vldrive.conf ] || {
+    echo "Cannot find $srcdir"
+    exit 1
+}
+
+module=versaapi
+version=1.5.0
+
+## Patched version with dkms.conf and dkms_build.sh script.
+src=/lnfs/lsst/pkgarchive/${module}-${version}_dkms.tar.xz
+
+if [ -r $src ]; then
+
+    [ -e /usr/src/$module-$version ] || tar -C /usr/src -axf $src
+
+    ## TODO skip if already present in dkms status?
+    for f in add build install; do
+        dkms $f -m $module -v $version && continue
+        echo "dkms $f FAILED"
+        break
+    done
+else
+    echo "WARNING: skipping dkms for missing $src"
+fi
+
+
+f=/etc/modules-load.d/vldrive.conf
+[ -e $f ] || cp $srcdir/${f##*/} $f
+
+
+## cat /sys/module/vldrive/parameters/FPGA_BASE should return 3200.
+f=/etc/modprobe.d/vldrive.conf
+[ -e $f ] || cp $srcdir/modprobed-${f##*/} $f
+
+
+f=/usr/local/lib/libVL_OSALib.1.5.0.so
+[ -e $f ] || (
+    cp /usr/src/$module-$version/vl_${f##*/} $f
+    f=${f##*/}
+    cd /usr/local/lib
+    ln -s $f ${f/$version./}.1
+    ln -s $f ${f/$version./}
+)
+
+
+## TODO set /dev/vldrive permissions?
+
+
+exit 0
