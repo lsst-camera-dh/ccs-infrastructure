@@ -1,0 +1,14 @@
+#!/bin/bash
+
+## start can interfaces. Called as a oneshot service at startup.
+PATH=/usr/sbin:$PATH
+
+status=0
+
+echo "starting can0 interface..."
+ip link set can0 up type can bitrate 1000000 || status=$?
+
+echo "starting can1 interface..."
+ip link set can1 up type can bitrate 125000 || status=$?
+
+exit $status

@@ -1004,68 +1004,7 @@ AutomaticLoginEnable=true' /etc/gdm/custom.conf
         ;;
 
     *fcs[0-9][0-9]|lsst-lion18)
-
-        can_module=advSocketCAN
-        can_version=1.0.1.0
-
-        ## Patched version with dkms.conf and fixed driver/Makefile.
-        can_src=/lnfs/lsst/pkgarchive/${can_module}_V${can_version}_dkms.tar.xz
-
-        if [ -r $can_src ]; then
-
-            tar -C /usr/src -axf $can_src
-
-            can_module=$(echo $can_module | tr '[A-Z]' '[a-z]')
-
-            for f in add build install; do
-                dkms $f -m $can_module -v $can_version && continue
-                echo "dkms $f FAILED"
-                break
-            done
-        else
-            echo "WARNING: skipping dkms for missing $can_src"
-        fi
-
-        f=/etc/modules-load.d/canbus.conf
-        [ -e $f ] || cat <<EOF > $f
-lp
-can
-can_dev
-can_raw
-advsocketcan
-advcan_sja1000
-EOF
-
-        can_init=/usr/local/libexec/canbus-init
-
-        [ -e $can_init ] || cat <<'EOF' > $can_init
-#!/bin/bash
-
-## start can interfaces. Called as a oneshot service at startup.
-PATH=/usr/sbin:$PATH
-
-echo "starting can0 interface..."
-ip link set can0 up type can bitrate 1000000
-
-echo "starting can1 interface..."
-ip link set can1 up type can bitrate 125000
-EOF
-
-        chmod 755 $can_init
-
-        f=/etc/systemd/system/canbus.service
-        [ -e $f ] || cat <<EOF > $f
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=$can_init
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-        systemctl enable --now canbus || true
-
+        ./lion_canbus/setup
         ;;
 esac
 

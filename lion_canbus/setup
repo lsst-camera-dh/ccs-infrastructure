@@ -1,0 +1,53 @@
+#!/bin/bash
+
+## Setup the canbus module on a lion host.
+## This script must be called with a full filename (ie not via PATH)
+## so that it can find its auxiliary files.
+
+srcdir=${0%/*}
+
+[ -e $srcdir/canbus.conf ] || {
+    echo "Cannot find $srcdir"
+    exit 1
+}
+
+can_module=advSocketCAN
+can_version=1.0.1.0
+
+## Patched version with dkms.conf and fixed driver/Makefile.
+can_src=/lnfs/lsst/pkgarchive/${can_module}_V${can_version}_dkms.tar.xz
+
+if [ -r $can_src ]; then
+
+    tar -C /usr/src -axf $can_src
+
+    can_module=$(echo $can_module | tr '[A-Z]' '[a-z]')
+
+    for f in add build install; do
+        dkms $f -m $can_module -v $can_version && continue
+        echo "dkms $f FAILED"
+        break
+    done
+else
+    echo "WARNING: skipping dkms for missing $can_src"
+fi
+
+
+f=/etc/modules-load.d/canbus.conf
+[ -e $f ] || cp $srcdir/canbus.conf $f
+
+
+can_init=/usr/local/libexec/canbus-init
+
+[ -e $can_init ] || {
+    cp $srcdir/${can_init##*/} $can_init
+    chmod 755 $can_init
+}
+
+
+f=/etc/systemd/system/canbus.service
+[ -e $f ] || sed "s|\$can_init|$can_init|" $srcdir/${f##*/}.template > $f
+
+systemctl enable --now canbus || true
+
+exit 0
