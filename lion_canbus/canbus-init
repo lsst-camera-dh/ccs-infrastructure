@@ -5,6 +5,8 @@ PATH=/usr/sbin:$PATH
 
 status=0
 
+modprobe -a $(cat /etc/modules-load.d/canbus.conf)
+
 echo "starting can0 interface..."
 ip link set can0 up type can bitrate 1000000 || status=$?
 
