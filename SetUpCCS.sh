@@ -1016,6 +1016,11 @@ AutomaticLoginEnable=true' /etc/gdm/custom.conf
     lsst-uno11)
         ./imanager/setup
         ;;
+
+    ## FIXME what are the right hosts for this?
+    lsst-uno06|comcam-hcu03)
+        ./filter_changer/setup
+        ;;
 esac
 
 

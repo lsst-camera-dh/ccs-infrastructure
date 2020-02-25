@@ -1,0 +1,24 @@
+#!/bin/bash
+
+## Create /dev/{encoder,motor} symlinks for filter changer hcu.
+## This script must be called with a full filename (ie not via PATH)
+## so that it can find its auxiliary files.
+
+srcdir=${0%/*}
+
+[ -e $srcdir/99-usb-serial.rules ] || {
+    echo "Cannot find $srcdir"
+    exit 1
+}
+
+
+f=/etc/udev/rules.d/99-usb-serial.rules
+[ -e $f ] || {
+    cp $srcdir/${f##*/} $f
+
+    /sbin/udevadm control --reload-rules
+    /sbin/udevadm trigger --type=devices --action=change
+}
+
+
+exit 0
