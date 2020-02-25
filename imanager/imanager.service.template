@@ -1,0 +1,7 @@
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=$service_start
+
+[Install]
+WantedBy=multi-user.target

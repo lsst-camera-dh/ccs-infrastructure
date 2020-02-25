@@ -1011,6 +1011,11 @@ AutomaticLoginEnable=true' /etc/gdm/custom.conf
     lsst-lion09|lsst-lion1[05])
         ./lion_vldrive/setup
         ;;
+
+    ## FIXME what are the right hosts for this?
+    lsst-uno11)
+        ./imanager/setup
+        ;;
 esac
 
 

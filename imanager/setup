@@ -1,0 +1,53 @@
+#!/bin/bash
+
+## Setup the iManager module.
+## This script must be called with a full filename (ie not via PATH)
+## so that it can find its auxiliary files.
+
+srcdir=${0%/*}
+
+[ -e $srcdir/imanager.conf ] || {
+    echo "Cannot find $srcdir"
+    exit 1
+}
+
+module=imanager
+version=1.5.0
+
+## Patched version with dkms.conf and fixed Makefile.
+src=/lnfs/lsst/pkgarchive/${module}-${version}_dkms.tar.xz
+
+if [ -r $src ]; then
+
+    [ -e /usr/src/$module-$version ] || tar -C /usr/src -axf $src
+
+    ## TODO skip if already present in dkms status?
+    for f in add build install; do
+        dkms $f -m $module -v $version && continue
+        echo "dkms $f FAILED"
+        break
+    done
+else
+    echo "WARNING: skipping dkms for missing $src"
+fi
+
+
+f=/etc/modules-load.d/imanager.conf
+[ -e $f ] || cp $srcdir/imanager.conf $f
+
+
+service_start=/usr/local/libexec/imanager-init
+
+[ -e $service_start ] || {
+    cp $srcdir/${service_start##*/} $service_start
+    chmod 755 $service_start
+}
+
+
+f=/etc/systemd/system/imanager.service
+[ -e $f ] || \
+    sed "s|\$service_start|$service_start|" $srcdir/${f##*/}.template > $f
+
+systemctl enable --now imanager || true
+
+exit 0

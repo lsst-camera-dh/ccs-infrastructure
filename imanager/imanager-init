@@ -1,0 +1,23 @@
+#!/bin/bash
+
+## Called as a oneshot service at startup.
+
+getent group | grep -q ^gpio: || groupadd gpio
+groups ccs | grep -q gpio || usermod -a -G gpio ccs
+
+modprobe imanager-core
+modprobe gpio-imanager
+
+[ -e /sys/class/gpio/export ] || exit 1
+
+for ((n=504;n<=511;n++)); do
+    echo "$n" > /sys/class/gpio/export
+done
+
+chmod g+w /sys/class/gpio/gpio{508..511}/value
+chmod og+w /sys/class/gpio/gpio50*/value
+
+chgrp -R gpio /sys/class/gpio
+chgrp -R gpio /sys/devices/platform/imanager/imanager-gpio
+
+exit 0
