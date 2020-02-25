@@ -51,7 +51,17 @@ f=/usr/local/lib/libVL_OSALib.1.5.0.so
 )
 
 
-## TODO set /dev/vldrive permissions?
+## Set /dev/vldrive: group gpio, mode 660 (default is root 600).
+getent group | grep -q ^gpio: || groupadd gpio
+groups ccs | grep -q gpio || usermod -a -G gpio ccs
+
+f=/etc/udev/rules.d/99-vldrive.rules
+[ -e $f ] || {
+    cp $srcdir/${f##*/} $f
+
+    /sbin/udevadm control --reload-rules
+    /sbin/udevadm trigger --type=devices --action=change
+}
 
 
 exit 0
