@@ -1,0 +1,5 @@
+#!/bin/bash
+getent group lsst-ccs | \
+  sed s/lsst-ccs:\*:.*:// | tr , '\n' | sed s/$/@SLAC.STANFORD.EDU/ \
+  > /tmp/.k5login
+rsync --checksum /tmp/.k5login ~
