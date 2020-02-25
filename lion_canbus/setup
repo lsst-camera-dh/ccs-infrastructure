@@ -11,25 +11,26 @@ srcdir=${0%/*}
     exit 1
 }
 
-can_module=advSocketCAN
-can_version=1.0.1.0
+module=advSocketCAN
+version=1.0.1.0
 
 ## Patched version with dkms.conf and fixed driver/Makefile.
-can_src=/lnfs/lsst/pkgarchive/${can_module}_V${can_version}_dkms.tar.xz
+src=/lnfs/lsst/pkgarchive/${module}_V${version}_dkms.tar.xz
 
-if [ -r $can_src ]; then
+if [ -r $src ]; then
 
-    tar -C /usr/src -axf $can_src
+    [ -e /usr/src/$module-$version ] || tar -C /usr/src -axf $src
 
-    can_module=$(echo $can_module | tr '[A-Z]' '[a-z]')
+    module=$(echo $module | tr '[A-Z]' '[a-z]')
 
+    ## TODO skip if already present in dkms status?
     for f in add build install; do
-        dkms $f -m $can_module -v $can_version && continue
+        dkms $f -m $module -v $version && continue
         echo "dkms $f FAILED"
         break
     done
 else
-    echo "WARNING: skipping dkms for missing $can_src"
+    echo "WARNING: skipping dkms for missing $src"
 fi
 
 
