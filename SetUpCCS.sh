@@ -899,7 +899,7 @@ eth0=$(nmcli -g ip4.address,general.device dev show 2> /dev/null | \
 }
 
 ## TODO try to automatically fix netspeed?
-[ -e $monitd/network ] || cat <<EOF >| $monitd/network
+[[ $shost == *-vi* ]] || [ -e $monitd/network ] || cat <<EOF >| $monitd/network
 check network $eth0 with interface $eth0
   if changed link capacity then alert
   if saturation > 90% for 3 cycles then alert
@@ -912,7 +912,7 @@ cp monit/monit_netspeed /usr/local/bin
 
 
 case $shost in
-    *-uno*|*-lion*|*-hcu*|*-aio*|*-lt*|*-vw*) : ;;
+    *-uno*|*-lion*|*-hcu*|*-aio*|*-lt*|*-vw*|*-vi*) : ;;
     *)
         [ -e $monitd/hwraid ] || cat <<'EOF' >| $monitd/hwraid
 check program hwraid with path /usr/local/bin/monit_hwraid timeout 10 seconds
