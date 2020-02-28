@@ -454,17 +454,7 @@ EOF
 
     f=~ccs/crontabs/update-k5login
     if [ ! -e $f ] || [ ! -x $f ] ; then
-        cat <<EOF >>$f
-#!/bin/bash
-getent netgroup u-lsst-ccs |
- sed -e 's/(-,//g' |\
- sed -e 's/,)//g' |\
- sed -e 's/^u-lsst-ccs *//' |\
- tr ' ' '\n' |\
- sed -e 's/$/@SLAC.STANFORD.EDU/' > /tmp/.k5login
-rsync --checksum /tmp/.k5login ~
-
-EOF
+        cp ./update-k5login $f
         chown -R ccs:ccs ~ccs/crontabs
 fi
     [ -x $f ] || chmod +x $f
