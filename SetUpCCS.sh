@@ -1013,6 +1013,22 @@ AutomaticLoginEnable=true' /etc/gdm/custom.conf
         ;;
 esac
 
+case $shost in
+    *-uno*|*-lion*|*-hcu*)
+
+        f=/etc/sudoers.d/poweroff
+        [ -e $f ] || cp ./power/sudo-poweroff $f
+
+        f=/usr/local/libexec/poweroff
+        [ -e $f ] || cp ./power/${f##*/} $f
+
+        for f in CCS_POWEROFF CCS_REBOOT; do
+            f=/usr/local/bin/$f
+            [ -e $f ] || cp ./power/${f##*/} $f
+        done
+    ;;
+esac
+
 
 ## Newer java version for font rescaling on big display.
 [ $shost = lsst-vw01 ] && {

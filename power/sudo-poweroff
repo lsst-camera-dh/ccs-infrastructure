@@ -1,0 +1,5 @@
+Cmnd_Alias POWEROFF = \
+/usr/bin/systemctl reboot, \
+/usr/bin/systemctl poweroff
+
+ccs	ALL= NOPASSWD: POWEROFF

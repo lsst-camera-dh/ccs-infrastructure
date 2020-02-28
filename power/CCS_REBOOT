@@ -1,0 +1,3 @@
+#!/bin/sh
+
+/usr/local/libexec/poweroff reboot "$1"
