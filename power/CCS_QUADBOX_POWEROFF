@@ -1,0 +1,47 @@
+#!/bin/bash
+
+quadbox=lsst-lion02,lsst-lion03,lsst-lion04,lsst-lion05
+
+user=ccs
+
+poweroff="/usr/local/bin/CCS_POWEROFF"
+
+
+[ $(id -un) = $user ] || {
+    ## Logging in as another user then sudo -u ccs doesn't work,
+    ## since you cannot Kerberos access the remote hosts.
+    echo "You must have logged in as $user to use this"
+    exit 1
+}
+
+## Not very robust, so let user decide whether to abort.
+## Really we should check for a valid Kerberos ticket.
+[ "$SUDO_UID" ] && \
+    echo "Running this via sudo will not work; you should login as $user"
+
+
+shost=${HOSTNAME%%.*}
+
+case $quadbox in
+    *$shost*) : ;;
+    *) echo "You must run this from a quadbox host"; exit 1 ;;
+esac
+
+
+[ "$1" = "-y" ] || {
+    echo "Preparing to shutdown quadbox: $quadbox"
+    read -n 1 -p "y to proceed, else quit: " reply
+    echo
+    [ "$reply" = "y" ] || {
+        echo "aborted"
+        exit 0
+    }
+}
+
+
+## We could use plain ssh instead.
+echo "Shutting down remote hosts..."
+clush -w $quadbox\!$shost $poweroff -y
+
+echo "Shutting down this host"
+$poweroff $1

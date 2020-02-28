@@ -1030,6 +1030,15 @@ case $shost in
 esac
 
 
+## TODO quadbox hosts.
+case $shost in
+    lsst-lion0[2-5])
+        f=/usr/local/bin/CCS_QUADBOX_POWEROFF
+        [ -e $f ] || cp ./power/${f##*/} $f
+        ;;
+esac
+
+
 ## Newer java version for font rescaling on big display.
 [ $shost = lsst-vw01 ] && {
 
