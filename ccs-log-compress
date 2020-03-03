@@ -1,0 +1,121 @@
+#!/bin/bash
+
+### Compress/archive CCS log files.
+
+logdir=/var/log/ccs
+
+PN=${0##*/}
+
+nice_level=10
+
+## Minimum age of logs to operate on. 1 = yesterday.
+min_days=2
+
+## Maximum number of days to loop over.
+## If running this every day, this could be small.
+max_days=100
+
+## d=delete, m=move, anything else=do nothing
+archive_flag=
+
+## Archive files older than this many days.
+archive_days=60
+
+## If archiving by moving, where to put the files.
+archive_dir=/gpfs/slac/lsst/fs3/g/data/ccs-logs
+
+
+DEBUG=
+
+
+## Date format used by ccs log files.
+dformat="+%Y%m%d"
+
+
+die () {
+    echo "$@" 1>&2
+    exit 1
+}
+
+
+compress () {
+    local log=$1
+    [[ $log == *.gz ]] && return 0 # don't recompress
+    ## If log.gz already exists, let's not abort. Better than using gzip -f.
+    ## TODO compress to ${log}_#.gz instead?
+    [ -e $log.gz ] && return 0
+    gzip $log
+}
+
+
+archive () {
+    local log=$1
+
+    ## Only archive compressed files.
+    [[ $log == *.gz ]] || {
+        compress $log || return $?
+        log=$log.gz
+    }
+
+    case $archive_flag in
+        d)
+            ${DEBUG:+echo} rm $log
+            return $? ;;
+        m)
+            local dest=$archive_dir/${HOSTNAME%%.*}
+            mkdir -p $dest || return 1
+            ${DEBUG:+echo} mv $log $dest
+            return $?
+            ;;
+        *)
+            return 0 ;;
+    esac
+}
+
+
+## Main body.
+
+cd $logdir || die "cd $logdir error"
+
+
+lockfile=$logdir/.$PN.lock
+
+if [ -e $lockfile ]; then
+    die "$lockfile exists"
+else
+    echo $$ > $lockfile
+    trap "rm -f $lockfile" EXIT
+fi
+
+
+exec > $logdir/$PN.log 2>&1
+
+
+renice $nice_level $$ > /dev/null
+
+
+shopt -s extglob
+
+
+for ((n=$min_days; n<=$max_days; n++)); do
+
+    olddate=$(date "$dformat" -d "$n days ago")
+
+    ## Avoid *.lck files (perhaps we should delete old ones?).
+    for log in ccs-logs-*$olddate.log.+([0-9])?(.gz); do
+
+        [ -e "$log" ] || break
+
+        ## TODO skip if .lck exists?
+###        [ e $log.lck ] && continue
+
+        if [ $n -gt $archive_days ]; then
+            archive $log || die "error archiving $log"
+        else
+            compress $log || die "error compressing $log"
+        fi
+    done                        # $log
+
+done                            # $n
+
+exit 0
