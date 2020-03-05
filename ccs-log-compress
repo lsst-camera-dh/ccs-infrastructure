@@ -62,6 +62,12 @@ archive () {
             ${DEBUG:+echo} rm $log
             return $? ;;
         m)
+            [ -d ${archive_dir%/*} ] || {
+                ## eg gpfs missing.
+                echo "Cannot find $archive_dir parent"
+                return 1
+            }
+            ## TODO option to use rsync instead.
             local dest=$archive_dir/${HOSTNAME%%.*}
             mkdir -p $dest || return 1
             ${DEBUG:+echo} mv $log $dest
