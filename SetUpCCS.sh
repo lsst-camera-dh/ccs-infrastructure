@@ -178,6 +178,10 @@ grep -q "^org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" $f || \
     echo "org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" >> $f
 
 
+f=/etc/ccs/logging.properties
+[ -e $f ] || cp ./ccs/${f##*/} $f
+
+
 #- add the dh account
 # This is for etraveler, only used at slac.
 [ $my_system = slac ] && {
