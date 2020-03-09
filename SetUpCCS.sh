@@ -168,14 +168,13 @@ for f in ccsGlobal.properties logging.properties; do
 done
 
 f=/etc/ccs/udp_ccs.properties
-[ -e $f ] || touch $f
-## FIXME If the system does not have an fqdn (tucson), we should use
-## the IP address here. But that is less portable if the system gets a
-## new IP.
-grep -q "^org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" $f || \
-    echo "org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" >> $f
-
-
+[ -e $f ] || {
+    ## FIXME If the system does not have an fqdn (tucson), we should use
+    ## the IP address here. But that is less portable if the system gets a
+    ## new IP.
+    HOSTNAME=$(hostname --fqdn)
+    sed "s/HOSTNAME/${HOSTNAME}/" ./ccs/${f##*/}.template > $f
+done
 
 
 #- add the dh account
