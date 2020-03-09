@@ -162,12 +162,10 @@ done
 ## TODO what should the ownership of these files be?
 ## https://jira.slac.stanford.edu/browse/LSSTIR-43
 
-f=/etc/ccs/ccsGlobal.properties
-[ -e $f ] || touch $f
-grep -q "^org.lsst.ccs.level=INFO" $f || echo "org.lsst.ccs.level=INFO" >> $f
-grep -q "^org.lsst.ccs.logdir=/var/log/ccs" $f || \
-    echo "org.lsst.ccs.logdir=/var/log/ccs" >> $f
-
+for f in ccsGlobal.properties logging.properties; do
+    f=/etc/ccs/$f
+    [ -e $f ] || cp ./ccs/${f##*/} $f
+done
 
 f=/etc/ccs/udp_ccs.properties
 [ -e $f ] || touch $f
@@ -178,8 +176,6 @@ grep -q "^org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" $f || \
     echo "org.lsst.ccs.jgroups.ALL.UDP.bind_addr=$(hostname --fqdn)" >> $f
 
 
-f=/etc/ccs/logging.properties
-[ -e $f ] || cp ./ccs/${f##*/} $f
 
 
 #- add the dh account
