@@ -174,7 +174,7 @@ f=/etc/ccs/udp_ccs.properties
     ## new IP.
     HOSTNAME=$(hostname --fqdn)
     sed "s/HOSTNAME/${HOSTNAME}/" ./ccs/${f##*/}.template > $f
-done
+}
 
 
 #- add the dh account
