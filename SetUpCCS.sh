@@ -41,6 +41,25 @@ case $my_system in
             /usr/sbin/hwclock -w # should not be needed, but is?
         }
 
+        fhost=$shost.slac.stanford.edu
+
+        ## This sets: limit_login, yum_should, kernel_updatedefault.
+        ## We can relax the last two for some hosts, eg aios.
+        knife node run_list add $fhost 'role[lsst]'
+
+        ## Unchanged: dc, uno, lion, ir2daq01, ir2db01, mcm, ss, vs
+        case $shost in
+            *-it01|*-vw0[12])
+                ## Fix kernel for gpfs.
+                knife node attribute set $fhost yum_should "update everything"
+                ;;
+            *-aio*|*-vw*|*-lt*|*-vi*)
+                knife node attribute set $fhost kernel_updatedefault "yes"
+                ## "update security", "update nothing"
+                knife node attribute set $fhost yum_should "update everything"
+                ;;
+        esac
+
         ## Slow. Maybe better done separately?
         ## FIXME. Also don't want this on servers.
         ## Although people sometimes want to eg use vnc,
