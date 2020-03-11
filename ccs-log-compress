@@ -16,10 +16,10 @@ min_days=2
 max_days=100
 
 ## d=delete, m=move, anything else=do nothing
-archive_flag=
+archive_flag=m
 
 ## Archive files older than this many days.
-archive_days=60
+archive_days=30
 
 ## If archiving by moving, where to put the files.
 archive_dir=/gpfs/slac/lsst/fs3/g/data/ccs-logs
