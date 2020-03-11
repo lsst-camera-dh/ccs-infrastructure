@@ -108,7 +108,7 @@ for ((n=$min_days; n<=$max_days; n++)); do
     olddate=$(date "$dformat" -d "$n days ago")
 
     ## Avoid *.lck files (perhaps we should delete old ones?).
-    for log in ccs-logs-*$olddate.log.+([0-9])?(.gz); do
+    for log in ccs-logs-*$olddate.log.+([0-9.])?(.gz); do
 
         [ -e "$log" ] || break
 
