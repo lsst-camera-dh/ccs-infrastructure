@@ -47,15 +47,20 @@ case $my_system in
         ## We can relax the last two for some hosts, eg aios.
         knife node run_list add $fhost 'role[lsst]'
 
-        ## Unchanged: dc, uno, lion, ir2daq01, ir2db01, mcm, ss, vs
+        ## Unchanged: uno, lion (hcus).
         case $shost in
+            ## TODO: consider using "update security" (rather than "nothing")
+            ## on non-hcus:
+            ### *-dc*|*-mcm*|*-ss*|*-vs*|*-ir2daq*|*-ir2db*)
+            ###     knife node attribute set $fhost yum_should "update security"
+            ###     ;;
             *-it01|*-vw0[12])
-                ## Fix kernel for gpfs.
+                ## Leave kernel fixed for gpfs.
                 knife node attribute set $fhost yum_should "update everything"
                 ;;
             *-aio*|*-vw*|*-lt*|*-vi*)
                 knife node attribute set $fhost kernel_updatedefault "yes"
-                ## "update security", "update nothing"
+                ## Options: "update security", "update nothing"
                 knife node attribute set $fhost yum_should "update everything"
                 ;;
         esac
