@@ -38,15 +38,20 @@ die () {
 }
 
 
+ncompress=0
+
 compress () {
     local log=$1
     [[ $log == *.gz ]] && return 0 # don't recompress
     ## If log.gz already exists, let's not abort. Better than using gzip -f.
     ## TODO compress to ${log}_#.gz instead?
     [ -e $log.gz ] && return 0
+    let ncompress++
     gzip $log
 }
 
+
+narchive=0
 
 archive () {
     local log=$1
@@ -70,12 +75,21 @@ archive () {
             ## TODO option to use rsync instead.
             local dest=$archive_dir/${HOSTNAME%%.*}
             mkdir -p $dest || return 1
+            let narchive++
             ${DEBUG:+echo} mv $log $dest
             return $?
             ;;
         *)
             return 0 ;;
     esac
+}
+
+
+exitfunc () {
+    rm -f $lockfile
+    [ $ncompress -gt 0 ] && echo "Compressed $ncompress"
+    [ $narchive -gt 0 ] && echo "Archived $narchive"
+    return 0
 }
 
 
@@ -90,7 +104,7 @@ if [ -e $lockfile ]; then
     die "$lockfile exists"
 else
     echo $$ > $lockfile
-    trap "rm -f $lockfile" EXIT
+    trap exitfunc EXIT
 fi
 
 
