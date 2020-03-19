@@ -1077,6 +1077,23 @@ esac
         fi
     }
 
+
+    ## javafx is not included in this version.
+    ## https://openjfx.io/openjfx-docs/#install-javafx
+    jfxver=$jdkver              # coincidence?
+    jfxzip=/lnfs/lsst/pkgarchive/openjfx-${jfxver}_linux-x64_bin-sdk.zip
+
+    ## TODO To use this, we need to add to the java command line:
+    ## -p $jvmdir/javafx-sdk-$jfxver/lib --add-modules javafx.controls
+    [ -e $jvmdir/javafx-sdk-$jfxver ] || {
+        if [ -e $jfxzip ]; then
+            unzip -q -d $jvmdir $jfxzip
+        else
+            echo "WARNING skipping missing file: $jfxzip"
+        fi
+    }
+
+
     jdkccs=/etc/ccs/$jdkccs
 
     [ -e $jdkccs ] || \
