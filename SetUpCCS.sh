@@ -1069,11 +1069,13 @@ esac
     jdkver=11.0.2
     jdktar=/lnfs/lsst/pkgarchive/openjdk-${jdkver}_linux-x64_bin.tar.gz
 
-    if [ -e $jdktar ]; then
-        tar -C $jvmdir -axf $jdktar
-    else
-        echo "WARNING skipping missing file: $jdktar"
-    fi
+    [ -e $jvmdir/jdk-$jdkver ] || {
+        if [ -e $jdktar ]; then
+            tar -C $jvmdir -axf $jdktar
+        else
+            echo "WARNING skipping missing file: $jdktar"
+        fi
+    }
 
     jdkccs=/etc/ccs/$jdkccs
 
