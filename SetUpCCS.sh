@@ -1067,7 +1067,7 @@ esac
 
     jvmdir=/usr/lib/jvm         # somewhere in /usr/local better?
     jdkver=11.0.2
-    jdktar=/root/openjdk-${jdkver}_linux-x64_bin.tar.gz # fixme
+    jdktar=/lnfs/lsst/pkgarchive/openjdk-${jdkver}_linux-x64_bin.tar.gz
 
     if [ -e $jdktar ]; then
         tar -C $jvmdir -axf $jdktar
