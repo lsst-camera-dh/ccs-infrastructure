@@ -652,6 +652,13 @@ rpm --quiet -q gdm && {
 cp -a ./ccs-sudoers-services /etc/cron.hourly/ || true
 
 
+grep -q ^HISTFILESIZE /root/.bashrc || \
+    printf "\nexport HISTFILESIZE=1000000\n" >> /root/.bashrc
+
+grep -q ^HISTSIZE /root/.bashrc || \
+    printf "\nexport HISTSIZE=50000\n" >> /root/.bashrc
+
+
 ## grub
 ## https://github.com/sriemer/fix-linux-mouse/
 ## Prevent console spam from some common dell usb mice.
