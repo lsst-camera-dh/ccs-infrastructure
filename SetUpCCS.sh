@@ -1094,15 +1094,13 @@ esac
     }
 
 
-    jdkccs=/etc/ccs/$jdkccs
+    jdkccs=/etc/ccs/jdk11
 
     [ -e $jdkccs ] || \
-        printf "export PATH=$jvmdir/jdk-$jdkver/bin:$PATH\n" > $jdkccs
+        printf "export PATH=$jvmdir/jdk-$jdkver/bin:\$PATH\n" > $jdkccs
 
     f=/etc/ccs/ccs-console.app
-    grep -q ${jdkccs##*/} $f >& /dev/null || \
-        printf "system.pre-execute=${jdkccs##*/}\n" >> $f
-
+    [ -e $f ] || sed "s/JDKCCS/${jdkccs##*/}/" ./ccs/${f##*/}.template > $f
 }                               # lsst-vw01
 
 
