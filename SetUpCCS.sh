@@ -96,7 +96,10 @@ for f in epel-release git rsync emacs chrony nano ntp screen sysstat unzip \
 done
 
 case $shost in
-    lsst-it01|*-aio*|*-vw*) yum -q -y install libreoffice-base ;;
+    lsst-it01|*-aio*|*-vw*)
+        yum -q -y install libreoffice-base
+        rpm --quiet -q zoom || rpm -Uvh /lnfs/lsst/pkgarchive/zoom*.rpm || :
+        ;;
 esac
 
 # It's hard to construct this automatically.
