@@ -558,12 +558,12 @@ EOF
 [ -d /scratch ] && grep -q "/scratch " /etc/mtab && chmod 1777 /scratch
 
 
-## TODO this should be part of the user creation step.
-## I believe changing UMASK in /etc/login.defs would change the default
-## for home creation (and nothing else?).
-## Seems like all users should be in the same group though, rather
-## than each having their own.
-[ $my_system = tucson ] && chmod 755 /home/*
+## Change the default for home directories.
+## TODO seems like all users should be in the same group though,
+## rather than each having their own?
+sed -i 's/^UMASK.*/UMASK 022/' /etc/login.defs
+
+chmod 755 /home/*/        # may not be appropriate for system accounts
 
 
 ## Applications menu.
