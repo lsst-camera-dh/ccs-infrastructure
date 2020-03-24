@@ -1018,12 +1018,64 @@ AutomaticLoginEnable=true' /etc/gdm/custom.conf
 
     *db[0-9][0-9])
         rpm -q --quiet mariadb-server || yum -q -y install mariadb-server
-        systemctl enable --now mariadb
+        systemctl enable mariadb
+
+        ## TODO more cases?
+        datadir=/home/mysql
+        for d in /lsst-ir2db01 /data; do
+            [ -e $d ] || continue
+            datadir=$d/mysql
+            break
+        done
+
+        case $my_system in
+            slac) ccsdb=ir2dbprod ;;
+            tucson) ccsdb=comcamdbprod ;;
+            *) ccsdb=ccsdbprod ;; # TODO?
+        esac
+
+        ccsdbpasswd=
+        read ccsdbpasswd < /lnfs/lsst/pkgarchive/ccsdbpasswd || : ## FIXME
+
+        if [ -e ${datadir%/*} ]; then
+            [ -e $datadir ] || {
+                mkdir -p $datadir
+                chown mysql:mysql $datadir
+                chmod 755 $datadir
+            }
+        else
+            echo "WARNING: skipping creation of $datadir"
+        fi
+
+        f=/etc/my.cnf.d/zzz-lsst-ccs.cnf
+        [ -e $f ] || {
+            sed "s|DATADIR|${datadir}|g" ./db/${f##*/}.template > $f
+            [ -d /scratch ] || sed -i '/^tmpdir/d' $f
+        }
+
         ## Next:
-        ## (Need to decide where to put the db.)
         ## Create empty db called called comcamdbprod;
         ## add ccs account with all privs on that db;
         ## localdb -u to create tables.
+        if systemctl start mariadb; then
+            mysql="mysql -u root -e"
+            $mysql "create database $ccsdb;"
+            if [ "$ccsdbpasswd" ]; then
+                $mysql "grant all on $ccsdb.* to 'ccs'@'%' identified by '$ccsdbpasswd';"
+                $mysql "grant all on $ccsdb.* to 'ccs'@'localhost' identified by '$ccsdbpasswd';"
+            else
+                echo "WARNING: not granting ccs privileges on $ccsdb"
+            fi
+            ## Remove some dubious defaults.
+            $mysql "drop database test;"
+            $mysql "delete from mysql.user where User='';"
+
+            $mysql "flush privileges;"
+
+        else
+            echo "WARNING: skipping creation of database"
+        fi
+
         ;;
 
     *fcs[0-9][0-9]|lsst-lion18)

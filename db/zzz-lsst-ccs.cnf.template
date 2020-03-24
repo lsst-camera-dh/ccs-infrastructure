@@ -1,0 +1,8 @@
+[mysqld]
+datadir=DATADIR
+socket=DATADIR/mysql.sock
+innodb_buffer_pool_size=1G
+tmpdir=/scratch/mysqltmp
+
+[client]
+socket=DATADIR/mysql.sock
