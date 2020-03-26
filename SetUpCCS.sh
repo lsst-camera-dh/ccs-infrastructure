@@ -35,7 +35,8 @@ fi
 
 
 ## FIXME only works at slac
-pkgarchive=/lnfs/lsst/pkgarchive
+## Note that we need to mount gpfs before we can use this.
+pkgarchive=/lnfs/lsst/pkgarchive    # /gpfs/slac/lsst/fs2/u1/pkgarchive
 [ $my_system = slac ] || pkgarchive=/root
 
 
@@ -102,10 +103,7 @@ for f in epel-release git rsync emacs chrony nano ntp screen sysstat unzip \
 done
 
 case $shost in
-    lsst-it01|*-aio*|*-vw*)
-        yum -q -y install libreoffice-base
-        rpm --quiet -q zoom || rpm -Uvh $pkgarchive/zoom*.rpm || :
-        ;;
+    lsst-it01|*-aio*|*-vw*) yum -q -y install libreoffice-base ;;
 esac
 
 # It's hard to construct this automatically.
@@ -360,8 +358,16 @@ EOF
     [ -h /lsst/data ] || ln -s /lnfs/lsst/data /lsst/data
 }                               # my_system = slac
 
+## Now we can use $pkgarchive.
 
 #------------------------------------------------------------------------------
+
+case $shost in
+    lsst-it01|*-aio*|*-vw*)
+        rpm --quiet -q zoom || rpm -Uvh $pkgarchive/zoom*.rpm || :
+        ;;
+esac
+
 #- install the correct java from nfs
 
 jdkrpm=$pkgarchive/jdk-8u112-linux-x64.rpm
