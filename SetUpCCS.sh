@@ -749,14 +749,11 @@ case $shost in
 esac
 
 
-[ "$monit_ping" ] && [ ! -e $monitd/hosts ] && {
+f=$monitd/hosts
+[ "$monit_ping" ] && [ ! -e $f ] && {
     for ping in $monit_ping; do
-
-        cat <<EOF >> $monitd/hosts
-check host ${ping%%.*} with address $ping
-  if failed ping4 count 3 with timeout 5 seconds then alert
-
-EOF
+        sed -e "s/HOST/${ping%%.*}/" -e "s/ADDRESS/$ping/" \
+            ./monit/${f##*/}.template >> $f
     done
 }                               # hosts
 

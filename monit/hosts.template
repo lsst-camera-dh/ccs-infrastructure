@@ -1,0 +1,3 @@
+check host HOST with address ADDRESS
+  if failed ping4 count 3 with timeout 5 seconds then alert
+
