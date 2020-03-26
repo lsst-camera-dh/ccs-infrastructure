@@ -512,29 +512,11 @@ chmod 755 /home/*/        # may not be appropriate for system accounts
 
 f=/etc/xdg/menus/applications-merged/lsst.menu
 mkdir -p ${f%/*}
-[ -e $f ] || cat <<'EOF' > $f
-<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
-"http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
-<Menu>
-<Name>Applications</Name>
-<Menu>
-<Name>LSST</Name>
-<Directory>lsst.directory</Directory>
-<Include>
-<Category>LSST</Category>
-</Include>
-</Menu>
-</Menu>
-EOF
+[ -e $f ] || cp ./desktop/${f##*/} $f
 
 f=/usr/share/desktop-directories/lsst.directory
 mkdir -p ${f%/*}
-[ -e $f ] || cat <<'EOF' > $f
-[Desktop Entry]
-Type=Directory
-Name=LSST
-Icon=lsst_appicon
-EOF
+[ -e $f ] || cp ./desktop/${f##*/} $f
 
 d=/usr/share/applications
 mkdir -p $d
