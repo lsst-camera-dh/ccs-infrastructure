@@ -689,12 +689,8 @@ function monit_disks () {
         esac
 
         ## Can also do IO rates.
-        cat <<EOF >> $outfile
-check filesystem $dname with path $disk
-     if space usage > 90% then alert
-     if inode usage > 90% then alert
-
-EOF
+        sed -e "s/FS/$dname/" -e "s|PATH|$disk|" \
+            ./monit/disks.template >> $outfile
     done
     return 0
 }                               # function monit_disks

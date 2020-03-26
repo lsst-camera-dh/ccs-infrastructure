@@ -1,0 +1,4 @@
+check filesystem FS with path PATH
+     if space usage > 90% then alert
+     if inode usage > 90% then alert
+
