@@ -902,11 +902,13 @@ esac
 
 systemctl -q is-enabled monit || systemctl enable monit
 
-## We can just copy the binary around.
-## NB Note that we configure this monit with --prefix=/usr
-## so that it consults /etc/monitrc, and install just the binary by
-## hand in /usr/local/bin.
-echo "TODO: install /usr/local/bin/monit and start service"
+## Note that we configure this monit with --prefix=/usr so that
+## it consults /etc/monitrc, and install just the binary by hand.
+if cp -p /lnfs/lsst/pkgarchive/monit /usr/local/bin/monit; then
+    systemctl start monit
+else
+    echo "TODO: install /usr/local/bin/monit and start service"
+fi
 
 
 ### Host-specific stuff.
