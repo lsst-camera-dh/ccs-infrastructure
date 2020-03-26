@@ -33,6 +33,12 @@ else
     exit 1
 fi
 
+
+## FIXME only works at slac
+pkgarchive=/lnfs/lsst/pkgarchive
+[ $my_system = slac ] || pkgarchive=/root
+
+
 case $my_system in
     slac)
         timedatectl | grep -q "RTC in local TZ: yes" && {
@@ -98,7 +104,7 @@ done
 case $shost in
     lsst-it01|*-aio*|*-vw*)
         yum -q -y install libreoffice-base
-        rpm --quiet -q zoom || rpm -Uvh /lnfs/lsst/pkgarchive/zoom*.rpm || :
+        rpm --quiet -q zoom || rpm -Uvh $pkgarchive/zoom*.rpm || :
         ;;
 esac
 
@@ -358,12 +364,7 @@ EOF
 #------------------------------------------------------------------------------
 #- install the correct java from nfs
 
-if [ $my_system = slac ]; then
-    jdkrpm=/lnfs/lsst/pkgarchive/jdk-8u112-linux-x64.rpm
-else
-    ## FIXME
-    jdkrpm=/root/jdk-8u112-linux-x64.rpm
-fi
+jdkrpm=$pkgarchive/jdk-8u112-linux-x64.rpm
 
 if [ -e $jdkrpm ]; then
 
@@ -823,7 +824,7 @@ systemctl -q is-enabled monit || systemctl enable monit
 
 ## Note that we configure this monit with --prefix=/usr so that
 ## it consults /etc/monitrc, and install just the binary by hand.
-if cp -p /lnfs/lsst/pkgarchive/monit /usr/local/bin/monit; then
+if cp -p $pkgarchive/monit /usr/local/bin/monit; then
     systemctl start monit
 else
     echo "TODO: install /usr/local/bin/monit and start service"
@@ -882,7 +883,7 @@ AutomaticLoginEnable=true' /etc/gdm/custom.conf
         esac
 
         ccsdbpasswd=
-        read ccsdbpasswd < /lnfs/lsst/pkgarchive/ccsdbpasswd || : ## FIXME
+        read ccsdbpasswd < $pkgarchive/ccsdbpasswd || : ## FIXME
 
         if [ -e ${datadir%/*} ]; then
             [ -e $datadir ] || {
@@ -976,7 +977,7 @@ esac
 
     jvmdir=/usr/lib/jvm         # somewhere in /usr/local better?
     jdkver=11.0.2
-    jdktar=/lnfs/lsst/pkgarchive/openjdk-${jdkver}_linux-x64_bin.tar.gz
+    jdktar=$pkgarchive/openjdk-${jdkver}_linux-x64_bin.tar.gz
 
     [ -e $jvmdir/jdk-$jdkver ] || {
         if [ -e $jdktar ]; then
@@ -990,7 +991,7 @@ esac
     ## javafx is not included in this version.
     ## https://openjfx.io/openjfx-docs/#install-javafx
     jfxver=$jdkver              # coincidence?
-    jfxzip=/lnfs/lsst/pkgarchive/openjfx-${jfxver}_linux-x64_bin-sdk.zip
+    jfxzip=$pkgarchive/openjfx-${jfxver}_linux-x64_bin-sdk.zip
 
     ## TODO To use this, we need to add to the java command line:
     ## -p $jvmdir/javafx-sdk-$jfxver/lib --add-modules javafx.controls
