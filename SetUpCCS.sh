@@ -716,7 +716,7 @@ EOF
 
 ### Monit.
 
-## TODO separate script for all this, using template files?
+## TODO separate script for this section?
 
 mkdir -p /var/monit             # not sure if program creates this...
 
@@ -724,55 +724,37 @@ mkdir -p /var/monit             # not sure if program creates this...
 ## TODO? add "read-only" to the allow line?
 sed -i.ORIG 's/^set daemon  30 /set daemon  300 /' /etc/monitrc
 
+
 monitd=/etc/monit.d
 
-[ -e $monitd/alert ] || {
 
-    ## TODO add another email address in case slack is down.
-    case $my_system in
-        slac)
-            mailhost=smtpunix.slac.stanford.edu
-            ## cam-ir2-computing-alerts
-            monit_addr=k2p7u7n6e7u4r2r7@lsstc.slack.com
-            ;;
-        tucson)
-            mailhost=mail.lsst.org
-            ## comcam-alerts
-            monit_addr=x7z0x9c0t2k4r1n1@lsstc.slack.com
-            ;;
-    esac
-
-    cat <<EOF >| $monitd/alert
-set mailserver $mailhost,
-               localhost
-set alert $monit_addr not on { instance, action } reminder 288
-EOF
-
-    cat <<'EOF' >> $monitd/alert
-
-set mail-format {
-  from:    Monit <monit@$HOST>
-  subject: monit alert -- $HOST $SERVICE $EVENT
-  message: $EVENT service $SERVICE
-                Date:        $DATE
-                Host:        $HOST
-                Action:      $ACTION
-                Description: $DESCRIPTION
-}
-EOF
-
-}                               # alert
+## TODO add another email address in case slack is down.
+case $my_system in
+    slac)
+        mailhost=smtpunix.slac.stanford.edu
+        ## cam-ir2-computing-alerts
+        monit_addr=k2p7u7n6e7u4r2r7@lsstc.slack.com
+        ;;
+    tucson)
+        mailhost=mail.lsst.org
+        ## comcam-alerts
+        monit_addr=x7z0x9c0t2k4r1n1@lsstc.slack.com
+        ;;
+    *)
+        mailhost=localhost
+        monit_addr=root@localhost
+        echo "WARNING: monit mailhost etc not set"
+        ;;
+esac
 
 
-[ -e $monitd/config ] || cat <<'EOF' >| $monitd/config
-set pidfile /var/run/monit.pid
-set idfile /var/cache/monit.id
-set statefile /var/cache/monit.state
+f=$monitd/alert
+[ -e $f ] || sed -e "s/MAILHOST/$mailhost/" -e "s/MONIT_ADDR/$monit_addr/" \
+                 ./monit/${f##*/}.template > $f
 
-set eventqueue
-    basedir /var/monit
-    slots 100
-EOF
+
+f=$monitd/config
+[ -e $f ] || cp ./monit/${f##*/} $f
 
 
 function monit_disks () {
@@ -827,34 +809,13 @@ done
 
 
 ## Alert if a client loses gpfs.
-## TODO add a repeat count here for reboots.
-[ "$native_gpfs" ] && [ ! -e $monitd/gpfs-exists ] && \
-    cat <<'EOF' > $monitd/gpfs-exists
-check file gpfs-fs1-exists with path /gpfs/slac/lsst/fs1/.exists
-      if does not exist for 3 cycles then alert
-
-check file gpfs-fs2-exists with path /gpfs/slac/lsst/fs2/.exists
-      if does not exist for 3 cycles then alert
-
-check file gpfs-fs3-exists with path /gpfs/slac/lsst/fs3/.exists
-      if does not exist for 3 cycles then alert
-EOF
+f=$monitd/gpfs-exists
+[ ! "$native_gpfs" ] || [ -e $f ] || cp ./monit/${f##*/} $f
 
 
-[ $shost = lsst-it01 ] && [ ! -e $monitd/gpfs ] && \
-    cat <<'EOF' > $monitd/gpfs
-check filesystem gpfs-fs1 with path /gpfs/slac/lsst/fs1
-     if space usage > 90% then alert
-     if inode usage > 90% then alert
-
-check filesystem gpfs-fs2 with path /gpfs/slac/lsst/fs2
-     if space usage > 95% then alert
-     if inode usage > 95% then alert
-
-check filesystem gpfs-fs3 with path /gpfs/slac/lsst/fs3
-     if space usage > 90% then alert
-     if inode usage > 90% then alert
-EOF
+## Check gpfs capacity.
+f=$monitd/gpfs
+[ $shost != lsst-it01 ] || [ -e $f ] || cp ./monit/${f##*/} $f
 
 
 ## TODO derive host lists from eg clustershell config?
@@ -883,10 +844,8 @@ EOF
 
 
 [[ $shost == *-mcm ]] && {
-    [ -e $monitd/inlet-temp ] || cat <<'EOF' > $monitd/inlet-temp
-check program inlet-temp with path /usr/local/bin/monit_inlet_temp timeout 10 seconds
-  if status != 0 then alert
-EOF
+    f=$monitd/inlet-temp
+    [ -e $f ] || cp ./monit/${f##*/} $f
 
     cp monit/monit_inlet_temp /usr/local/bin
 }
@@ -899,18 +858,13 @@ EOF
 ## be identical for all hosts.
 ## swap warning is not very useful, since Linux doesn't usually free swap.
 ## Maybe it should just be removed?
-[ -e $monitd/system ] || cat <<'EOF' >| $monitd/system
-check system $HOST
-  if loadavg (1min) per core > 2 for 3 cycles then alert
-  if loadavg (5min) per core > 1.5 for 5 cycles then alert
-  if cpu usage > 95% for 3 cycles then alert
-  if memory usage > 90% for 3 cycles then alert
-  if swap usage > 75% for 3 cycles then alert
-  if uptime < 15 minutes then alert
-EOF
-## We are using uptime to detect reboots. It also alerts on success.
-## TODO try "else if succeeded exec /usr/bin/true"?
+f=$monitd/system
+[ -e $f ] || cp ./monit/${f##*/} $f
 
+## We are using uptime to detect reboots. It also alerts on success.
+## This could be suppressed with:
+##  else if succeeded exec "/bin/false"
+## but that means uptime is always in failed state.
 
 ## The "primary" network interface, eg em1 or p4p1.
 eth0=$(nmcli -g ip4.address,general.device dev show 2> /dev/null | \
@@ -922,14 +876,9 @@ eth0=$(nmcli -g ip4.address,general.device dev show 2> /dev/null | \
 }
 
 ## TODO try to automatically fix netspeed?
-[[ $shost == *-vi* ]] || [ -e $monitd/network ] || cat <<EOF >| $monitd/network
-check network $eth0 with interface $eth0
-  if changed link capacity then alert
-  if saturation > 90% for 3 cycles then alert
-
-check program netspeed with path /usr/local/bin/monit_netspeed timeout 10 seconds
-  if status != 0 then alert
-EOF
+f=$monitd/network
+[[ $shost == *-vi* ]] || [ -e $f ] || \
+    sed "s/ETH0/$eth0/g" ./monit/${f##*/}.template > $f
 
 cp monit/monit_netspeed /usr/local/bin
 
@@ -937,10 +886,8 @@ cp monit/monit_netspeed /usr/local/bin
 case $shost in
     *-uno*|*-lion*|*-hcu*|*-aio*|*-lt*|*-vw*|*-vi*) : ;;
     *)
-        [ -e $monitd/hwraid ] || cat <<'EOF' >| $monitd/hwraid
-check program hwraid with path /usr/local/bin/monit_hwraid timeout 10 seconds
-  if status != 0 then alert
-EOF
+        f=$monitd/hwraid
+        [ -e $f ] || cp ./monit/${f##*/} $f
 
         ## Needs the raid utility (eg perccli64) to be installed separately.
         cp monit/monit_hwraid /usr/local/bin

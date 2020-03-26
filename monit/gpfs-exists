@@ -1,0 +1,8 @@
+check file gpfs-fs1-exists with path /gpfs/slac/lsst/fs1/.exists
+      if does not exist for 3 cycles then alert
+
+check file gpfs-fs2-exists with path /gpfs/slac/lsst/fs2/.exists
+      if does not exist for 3 cycles then alert
+
+check file gpfs-fs3-exists with path /gpfs/slac/lsst/fs3/.exists
+      if does not exist for 3 cycles then alert

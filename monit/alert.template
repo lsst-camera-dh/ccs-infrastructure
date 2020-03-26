@@ -1,0 +1,13 @@
+set mailserver MAILHOST,
+               localhost
+set alert MONIT_ADDR not on { instance, action } reminder 288
+
+set mail-format {
+  from:    Monit <monit@$HOST>
+  subject: monit alert -- $HOST $SERVICE $EVENT
+  message: $EVENT service $SERVICE
+                Date:        $DATE
+                Host:        $HOST
+                Action:      $ACTION
+                Description: $DESCRIPTION
+}

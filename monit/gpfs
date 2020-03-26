@@ -1,0 +1,11 @@
+check filesystem gpfs-fs1 with path /gpfs/slac/lsst/fs1
+     if space usage > 90% then alert
+     if inode usage > 90% then alert
+
+check filesystem gpfs-fs2 with path /gpfs/slac/lsst/fs2
+     if space usage > 95% then alert
+     if inode usage > 95% then alert
+
+check filesystem gpfs-fs3 with path /gpfs/slac/lsst/fs3
+     if space usage > 90% then alert
+     if inode usage > 90% then alert
