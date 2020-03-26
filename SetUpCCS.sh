@@ -1048,10 +1048,7 @@ esac
     rpm --quiet -q dkms || yum -q -y install dkms
 
     f=/etc/modprobe.d/disable-nouveau.conf
-    [ -s $f ] || cat <<EOF > $f
-blacklist nouveau
-options nouveau modeset=0
-EOF
+    [ -s $f ] || cp ./nvidia/${f##*/} $f
 
     grep -q "rdblacklist=nouveau" /etc/default/grub || {
         sed -i -e '/^GRUB_CMDLINE_LINUX=/ s/"$/ rdblacklist=nouveau"/' \
