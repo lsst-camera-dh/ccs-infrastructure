@@ -538,8 +538,8 @@ for f in console.{prod,dev} shell.{prod,dev}; do
     [ -e $d/$f ] && continue
 
     case $t in
-        prod) ver="production" ;;
-        dev) ver="development" ;;
+        prod) desc="production" ;;
+        dev) desc="development" ;;
     esac
 
     case $app in
@@ -547,17 +547,9 @@ for f in console.{prod,dev} shell.{prod,dev}; do
         shell) terminal=true ;;
     esac
 
-    cat <<EOF > $d/$f
-[Desktop Entry]
-Type=Application
-Encoding=UTF-8
-Name=CCS $app ($t)
-Comment=Camera Control System $app ($ver version)
-Exec=/lsst/ccs/$t/bin/ccs-$app
-Categories=LSST;
-Terminal=$terminal
-Icon=lsst_appicon
-EOF
+    sed -e "s/APP/$app/g" -e "s/VERSION/$t/g" \
+        -e "s/TERMINAL/$terminal/" -e "s/DESC/$desc/" \
+        ./desktop/lsst.ccs.APP.VERSION.desktop.template > $d/$f
 done
 
 

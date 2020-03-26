@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=CCS APP (VERSION)
+Comment=Camera Control System APP (DESC version)
+Exec=/lsst/ccs/VERSION/bin/ccs-APP
+Categories=LSST;
+Terminal=TERMINAL
+Icon=lsst_appicon
