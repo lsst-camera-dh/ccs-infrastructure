@@ -423,51 +423,15 @@ systemctl status fail2ban | grep -q 'Loaded: masked' || \
     ## TODO we might want to be more restrictive, eg 134.79.209.0/24.
     ## TODO what about things like DAQ, PTP etc on private subnets?
     f=/etc/firewalld/zones/trusted.xml
-    [ -e $f ] || cat <<'EOF' > $f
-<?xml version="1.0" encoding="utf-8"?>
-<zone target="ACCEPT">
-  <short>Trusted</short>
-  <description>All network connections are accepted.</description>
-  <source address="134.79.0.0/16"/>
-</zone>
-EOF
+    [ -e $f ] || cp ./firewalld/${f##*/} $f
 
     ## Whitelist all SLAC ips.
     f=/etc/fail2ban/jail.d/10-lsst-ccs.conf
-    [ -e $f ] || cat <<'EOF' > $f
-[DEFAULT]
-ignoreip = 127.0.0.1/8 134.79.0.0/16
+    [ -e $f ] || cp ./fail2ban/${f##*/} $f
 
-# 1w.
-bantime = 604800
-
-# maxretry failures in findtime seconds.
-findtime  = 3600
-
-maxretry = 10
-
-[sshd]
-
-enabled = true
-EOF
-
-## SLAC logs to /var/log/everything instead of /var/log/secure.
+    ## SLAC logs to /var/log/everything instead of /var/log/secure.
     f=/etc/fail2ban/paths-overrides.local
-    [ -e /var/log/everything ] && [ ! -e $f ] && cat <<'EOF' > $f
-[DEFAULT]
-
-syslog_authpriv = /var/log/everything
-
-syslog_user =  /var/log/everything
-
-syslog_ftp  = /var/log/everything
-
-syslog_daemon  = /var/log/everything
-
-syslog_local0  = /var/log/everything
-
-EOF
-
+    [ ! -e /var/log/everything ] || [ -e $f ] || cp ./fail2ban/${f##*/} $f
 }                               # my_system = slac
 
 

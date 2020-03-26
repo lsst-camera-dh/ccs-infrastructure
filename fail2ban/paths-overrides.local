@@ -1,0 +1,12 @@
+[DEFAULT]
+
+syslog_authpriv = /var/log/everything
+
+syslog_user =  /var/log/everything
+
+syslog_ftp  = /var/log/everything
+
+syslog_daemon  = /var/log/everything
+
+syslog_local0  = /var/log/everything
+
