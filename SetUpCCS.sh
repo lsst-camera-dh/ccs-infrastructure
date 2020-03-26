@@ -847,34 +847,13 @@ case $shost in
         /usr/sbin/ip link show lsst-daq >& /dev/null && iface=lsst-daq
 
         f=/etc/NetworkManager/dispatcher.d/30-ethtool
-        [ -e $f ] || cat <<'EOF' > $f
-#!/bin/sh
+        [ -e $f ] || {
+            ## Note: asked not to modify DAQ network interfaces.
+            sed "s/DAQ_INTERFACE/DISABLED-$iface/" \
+                ./network/${f##*/}.template > $f
+            chmod 755 $f
+        }
 
-# https://access.redhat.com/solutions/2841131
-
-myname=${0##*/}
-log() { logger -p user.info -t "${myname}" "$*"; }
-IFACE=$1
-ACTION=$2
-
-EOF
-
-        ## Note: asked not to modify DAQ network interfaces.
-        echo "DAQ=DISABLED-$iface" >> $f
-
-        cat <<'EOF' >> $f
-
-log "IFACE = $1, ACTION = $2"
-
-if [ "$IFACE" == "$DAQ" ] && [ "$ACTION" == "up" ]; then
-    log "ethool set-ring ${IFACE} rx 4096 tx 4096"
-    /sbin/ethtool --set-ring ${IFACE} rx 4096 tx 4096
-    log "ethool pause ${IFACE} autoneg off rx off tx off"
-    /sbin/ethtool --pause ${IFACE} autoneg off rx off tx off
-fi
-
-exit 0
-EOF
         ;;
 
     *-vw[0-9][0-9])
