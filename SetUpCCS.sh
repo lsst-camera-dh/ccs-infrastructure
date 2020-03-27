@@ -6,12 +6,19 @@
 # To run this script on a fresh machine, first get a local copy.
 # The best method is to use:
 # git clone https://github.com/lsst-camera-dh/ccs-infrastructure
-# Or (but these may not be as up-to-date as the above version):
-#  scp lsst-ss01:/gpfs/slac/lsst/fs2/u1/ir2admin/SetUpCCS.sh /tmp
-#  sudo /tmp/SetUpCCS.sh
-#  or run directly from /lnfs/lsst/ir2admin/SetUpCCS.sh
+# Or (but may not be as up-to-date as the above version):
+#  rsync -a lsst-it01:/gpfs/slac/lsst/fs2/u1/ir2admin/ccs-infrastructure .
+#  sudo ./ccs-infrastructure/SetUpCCS.sh
+# or run directly from /lnfs/lsst/ir2admin/ccs-infrastructure/SetUpCCS.sh
 
 set -e
+
+PD=${0%/*}
+[ "$PD" ] && cd "$PD"
+[ -e ./${0##*/} ] || {
+    echo "Cannot find source directory"
+    exit 1
+}
 
 shost=${HOSTNAME%%.*}
 
