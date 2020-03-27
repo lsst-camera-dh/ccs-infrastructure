@@ -215,13 +215,11 @@ f=/etc/ccs/udp_ccs.properties
 }
 
 
-#- add the dh account
-# This is for etraveler, only used at slac.
-[ $my_system = slac ] && {
+## Add the dh account, for etraveler (only used at slac).
+[ $my_system != slac ] || \
     getent passwd dh >& /dev/null || \
-        /usr/sbin/adduser -c "LSST Data Handling Account" \
-                          --groups dialout --create-home --uid 23001 dh
-}
+    /usr/sbin/adduser -c "LSST Data Handling Account" \
+                      --groups dialout --create-home --uid 23001 dh
 
 
 #------------------------------------------------------------------------------
