@@ -57,9 +57,15 @@ case $my_system in
 
         fhost=$shost.slac.stanford.edu
 
+        tempfile=/tmp/${0##*/}.$$
+        trap "rm -f $tempfile" EXIT
+
+        knife node show $fhost -Fjson > $tempfile
+
         ## This sets: limit_login, yum_should, kernel_updatedefault.
         ## We can relax the last two for some hosts, eg aios.
-        knife node run_list add $fhost 'role[lsst]'
+        grep -qF 'role[lsst]' $tempfile || \
+            knife node run_list add $fhost 'role[lsst]'
 
         ## Unchanged: uno, lion (hcus).
         case $shost in
@@ -70,14 +76,20 @@ case $my_system in
             ###     ;;
             *-it01|*-vw0[12])
                 ## Leave kernel fixed for gpfs.
-                knife node attribute set $fhost yum_should "update everything"
+                grep -q "yum_should.*update everything" $tempfile || \
+                    knife node attribute set $fhost \
+                          yum_should "update everything"
                 ;;
             *-aio*|*-vw*|*-lt*|*-vi*)
-                knife node attribute set $fhost kernel_updatedefault "yes"
+                grep -q "kernel_updatedefault.*yes" $tempfile || \
+                    knife node attribute set $fhost kernel_updatedefault "yes"
                 ## Options: "update security", "update nothing"
-                knife node attribute set $fhost yum_should "update everything"
+                grep -q "yum_should.*update everything" $tempfile || \
+                    knife node attribute set $fhost \
+                          yum_should "update everything"
                 ;;
         esac
+        rm -f $tempfile
 
         ## Slow. Maybe better done separately?
         ## FIXME. Also don't want this on servers.
@@ -820,7 +832,8 @@ systemctl -q is-enabled monit || systemctl enable monit
 
 ## Note that we configure this monit with --prefix=/usr so that
 ## it consults /etc/monitrc, and install just the binary by hand.
-if cp -p $pkgarchive/monit /usr/local/bin/monit; then
+if [ -e /usr/local/bin/monit ] || \
+       cp -p $pkgarchive/monit /usr/local/bin/monit; then
     systemctl start monit
 else
     echo "TODO: install /usr/local/bin/monit and start service"
