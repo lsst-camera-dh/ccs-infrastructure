@@ -460,11 +460,11 @@ systemctl status fail2ban | grep -q 'Loaded: masked' || \
     if [ ! -e $f ] || [ ! -x $f ] ; then
         cp ./update-k5login $f
         chown -R ccs:ccs ~ccs/crontabs
-fi
+    fi
     [ -x $f ] || chmod +x $f
-    #- run update-k5login
+    ##- run update-k5login
     sudo -u ccs $f
-    #- update the crontab file if needed
+    ##- update the crontab file if needed
     crontab -u ccs -l >& /dev/null | grep -q update-k5login || \
         echo "0,15,30,45 * * * * $f" | crontab -u ccs -
 }                               # my_system = slac
