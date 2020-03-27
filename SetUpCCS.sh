@@ -173,7 +173,7 @@ getent passwd ccs >& /dev/null || \
 #
 for d in /opt/lsst/ccs /opt/lsst/ccsadm; do
     [ -d $d ] || mkdir -p $d
-    stat -c %u:%g $d | grep -q "23000:23000" || chown ccs.ccs $d
+    stat -c %U:%G $d | grep -q "ccs:ccs" || chown ccs:ccs $d
 done
 
 #-- /lsst link management
@@ -187,8 +187,8 @@ done
 #-- log area, etc/ccs
 for d in /var/log/ccs /etc/ccs; do
     [ -d $d ] || mkdir -p $d
-    stat -c %u:%g $d | grep -q "0:23000" && continue
-    chown root.ccs $d
+    stat -c %U:%G $d | grep -q "root:ccs" && continue
+    chown root:ccs $d
     chmod g+s $d
     case $d in
         /var/log/ccs) chmod a+rw $d ;;
