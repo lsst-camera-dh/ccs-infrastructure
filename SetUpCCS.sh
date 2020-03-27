@@ -157,7 +157,7 @@ esac
 ## eg use useradd -K UID_MAX=22000.
 ## TODO: should this be a system (uid < 1000) account?
 ## Or should it be greater than UID_MAX (default 60000)?
-grep -q "^ccs:x:23000" /etc/passwd || \
+getent passwd ccs >& /dev/null || \
     /usr/sbin/adduser -c "CCS Operator Account" --groups dialout \
                       --create-home --uid 23000 ccs
 
@@ -211,7 +211,7 @@ f=/etc/ccs/udp_ccs.properties
 #- add the dh account
 # This is for etraveler, only used at slac.
 [ $my_system = slac ] && {
-    grep -q "23001" /etc/passwd || \
+    getent passwd dh >& /dev/null || \
         /usr/sbin/adduser -c "LSST Data Handling Account" \
                           --groups dialout --create-home --uid 23001 dh
 }
@@ -219,12 +219,12 @@ f=/etc/ccs/udp_ccs.properties
 
 #------------------------------------------------------------------------------
 #- add and manage the lsstadm group
-grep -q "^lsstadm:x:24000" /etc/group || groupadd --gid 24000 lsstadm
-grep -q "^lsstadm:x:24000.*ccs" /etc/group || \
+getent group lsstadm >& /dev/null || groupadd --gid 24000 lsstadm
+groups ccs | grep -q lsstadm || \
     gpasswd --add ccs lsstadm >/dev/null
 
-grep -q "^dh:" /etc/passwd && \
-    ! grep -q "^lsstadm:x:24000.*dh" /etc/group && \
+! getent passwd dh >& /dev/null || \
+    groups dh | grep -q lsstadm || \
     gpasswd --add dh lsstadm >/dev/null
 
 
@@ -241,7 +241,7 @@ sudo_opt="%lsst-ccs ALL = (ccs) ALL"
 
 grep -q "^$sudo_opt" $f || echo "$sudo_opt" >> $f
 
-grep -q "^dh:" /etc/passwd && {
+getent passwd dh >& /dev/null && {
     sudo_opt="${sudo_opt/(ccs)/(dh)}"
     grep -q "^$sudo_opt" $f || echo "$sudo_opt" >> $f
 }
