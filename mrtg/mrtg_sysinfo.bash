@@ -26,7 +26,7 @@ function usage ()
     cat 1>&2 <<EOF
 Usage: ${PN} load-<ui|us|a|>|mem|mem-buff|procs|swap|users|
          [i]root|[i]data[1-3]|scratch|uptime|
-         temp-cpu[2]|temp-bmc|temp-board|temp-pci|
+         temp-cpu[2]|temp-bmc|temp-board|temp-pci|temp-ipmi
          fans|loadavg|cpufreq[2]|iostat-[sd[abcd]]|idl
 Produce mrtg format statistics on a variety of quantities.
 Load can be user/idle; user/system; or active.
@@ -399,6 +399,25 @@ function zfsdu ()
 }
 
 
+function temp-ipmi ()
+{
+    local sudo="sudo"
+    [ $UID -eq 0 ] && sudo=
+    $sudo ipmi-sensors -t temperature --no-header-output \
+	--comma 2> /dev/null | gawk -v FS=',' '\
+{
+    if ($2 ~ /Inlet/) inlet=$1
+    else if ($2 ~ /Exhaust/) exhaust=$1
+}
+END \
+{
+    x = inlet + exhaust
+    if (!x) exit 1
+    printf("%.0f %.0f\n", inlet, exhaust)
+}' || return 1
+}				# function temp-ipmi
+
+
 function temp-pci ()
 {
     sensors 2> /dev/null | gawk '\
@@ -631,6 +650,8 @@ case $1 in
     temp-bmc) mrtg `temp bmc` ;;
 
     temp-board) mrtg 0 `temp board` ;;
+
+    temp-ipmi) mrtg `temp-ipmi` ;;
 
     temp-pci) mrtg 0 `temp-pci` ;;
 
