@@ -1,0 +1,403 @@
+# -*- mode: conf -*-
+
+Options[_]: growright,nobanner
+EnableIPv6: no
+Htmldir:  MRTG_DIR/html
+Imagedir: MRTG_DIR/html/images
+Logdir:   MRTG_DIR/html/logs
+IconDir:  MRTG_DIR/html/icons
+
+RunAsDaemon: yes
+Interval:    5
+
+#PageTop[$]:  <p>Back to <a href="../index.html">index</a>.<p>
+
+Target[ether]: /IFACE_IP:SNMP_COMMUNITY@localhost:
+SetEnv[ether]: MRTG_INT_IP="IFACE_IP" MRTG_INT_DESCR="IFACE_NAME"
+MaxBytes[ether]: IFACE_MAX
+Title[ether]: Traffic Analysis for IFACE_IP -- HOSTNAME
+PageTop[ether]: <h1>Traffic Analysis for IFACE_IP -- HOSTNAME</h1>
+  <div id="sysdetails">
+  <table>
+   <tr><td>System:</td><td>HOSTNAME</td></tr>
+   <tr><td>Description:</td><td>IFACE_NAME</td></tr>
+   <tr><td>ifType:</td><td>ethernet</td></tr>
+   <tr><td>ifName:</td><td>IFACE_NAME</td></tr>
+   <tr><td>Max Speed:</td><td>IFACE_MAX bytes/s</td></tr>
+   <tr><td>Ip:</td><td>IFACE_IP</td></tr>
+  </table>
+  </div>
+
+Target[mem]: `MRTG_DIR/mrtg_sysinfo.bash mem`
+Options[mem]: gauge,growright,nobanner,nopercent
+Title[mem]: Memory Usage
+PageTop[mem]: <h1>Memory Usage</h1>
+MaxBytes[mem]: MEM_MAX
+YLegend[mem]: Memory Usage
+ShortLegend[mem]: B
+kilo[mem]: 1024
+LegendI[mem]: Used:
+LegendO[mem]: Free:
+Legend1[mem]: Used Memory
+Legend2[mem]: Free Memory
+Legend3[mem]: 
+Legend4[mem]: 
+Colours[mem]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[swap]: `MRTG_DIR/mrtg_sysinfo.bash swap`
+Options[swap]: gauge,growright,nobanner,nopercent
+Title[swap]: Swap Usage
+PageTop[swap]: <h1>Swap Usage</h1>
+MaxBytes[swap]: SWAP_MAX
+YLegend[swap]: Swap
+ShortLegend[swap]: B
+kilo[swap]: 1024
+LegendI[swap]: Used:
+LegendO[swap]: Free:
+Legend1[swap]: Used Swap
+Legend2[swap]: Free Swap
+Legend3[swap]: 
+Legend4[swap]: 
+Colours[swap]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[buff]: `MRTG_DIR/mrtg_sysinfo.bash mem-buff`
+Options[buff]: gauge,growright,nobanner,nopercent
+Title[buff]: Used/Buff+Cache Memory
+PageTop[buff]: <h1>Used/Buff+Cache Memory</h1>
+MaxBytes[buff]: MEM_MAX
+YLegend[buff]: Memory Usage
+ShortLegend[buff]: B
+kilo[buff]: 1024
+LegendI[buff]: Used:
+LegendO[buff]: Buffers/cache:
+Legend1[buff]: Used Memory
+Legend2[buff]: Buffers and Cache
+Legend3[buff]: 
+Legend4[buff]: 
+Colours[buff]: DARK GREEN#006600,ORANGE#FFA500,RED#FF0000,VIOLET#ff00ff
+
+
+Target[load-ui]: `MRTG_DIR/mrtg_sysinfo.bash load-ui`
+Options[load-ui]: gauge,growright,nobanner,nopercent
+Title[load-ui]: User/Idle CPU Load
+PageTop[load-ui]: <h1>User/Idle CPU Load</h1>
+MaxBytes[load-ui]: 5000
+YLegend[load-ui]: CPU Load
+ShortLegend[load-ui]: %
+LegendI[load-ui]: User:
+LegendO[load-ui]: Idle:
+Legend1[load-ui]: User CPU Load (%)
+Legend2[load-ui]: Idle CPU Load (%)
+Legend3[load-ui]: 
+Legend4[load-ui]: 
+Colours[load-ui]: BLUE#0000FF,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[load-us]: `MRTG_DIR/mrtg_sysinfo.bash load-us`
+Options[load-us]: gauge,growright,nobanner,nopercent
+Title[load-us]: User/System CPU Load
+PageTop[load-us]: <h1>User/System CPU Load</h1>
+MaxBytes[load-us]: 5000
+YLegend[load-us]: CPU Load
+ShortLegend[load-us]: %
+LegendI[load-us]: User:
+LegendO[load-us]: System:
+Legend1[load-us]: User CPU Load (%)
+Legend2[load-us]: System CPU Load (%)
+Legend3[load-us]: 
+Legend4[load-us]: 
+Colours[load-us]: BLUE#0000FF,RED#FF0000,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[load-a]: `MRTG_DIR/mrtg_sysinfo.bash load-a`
+Options[load-a]: gauge,growright,nobanner,nopercent,noo
+Title[load-a]: Active CPU Load
+PageTop[load-a]: <h1>Active CPU Load</h1>
+MaxBytes[load-a]: 5000
+YLegend[load-a]: CPU Load
+ShortLegend[load-a]: %
+LegendI[load-a]: Active:
+LegendO[load-a]:
+Legend1[load-a]: Active CPU Load (%)
+Legend2[load-a]:
+Legend3[load-a]: 
+Legend4[load-a]: 
+Colours[load-a]: BLUE#0000FF,RED#FF0000,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[loadavg]: `MRTG_DIR/mrtg_sysinfo.bash loadavg`
+Options[loadavg]: gauge,growright,nobanner,noi,nopercent
+Title[loadavg]: Load Average
+PageTop[loadavg]: <h1>Load Average</h1>
+MaxBytes[loadavg]: 9999
+YLegend[loadavg]: load
+ShortLegend[loadavg]: / 100
+LegendO[loadavg]: Load:
+Legend2[loadavg]: Load
+Colours[loadavg]: RED#FF0000,CYAN#00cccc,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[users]: `MRTG_DIR/mrtg_sysinfo.bash users`
+Options[users]: gauge,growright,nobanner,noi,nopercent
+Title[users]: Users
+PageTop[users]: <h1>Users</h1>
+MaxBytes[users]: 1000
+YLegend[users]: users
+ShortLegend[users]: users
+LegendO[users]: Users:
+Legend2[users]: Users
+Colours[users]: RED#FF0000,YELLOW#aaaa00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[procs]: `MRTG_DIR/mrtg_sysinfo.bash procs`
+Options[procs]: gauge,growright,nobanner,noi,nopercent
+Title[procs]: Processes
+PageTop[procs]: <h1>Processes</h1>
+MaxBytes[procs]: 5000
+YLegend[procs]: procs
+ShortLegend[procs]: procs
+LegendO[procs]: Procs:
+Legend2[procs]: Processes
+Colours[procs]: RED#FF0000,CYAN#00cccc,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[uptime]: `MRTG_DIR/mrtg_sysinfo.bash uptime`
+Options[uptime]: gauge,growright,nobanner,nopercent
+Title[uptime]: Uptime
+PageTop[uptime]: <h1>Uptime</h1>
+MaxBytes[uptime]: 31536000
+YLegend[uptime]: Uptime secs
+ShortLegend[uptime]: s
+kilo[uptime]: 1000
+LegendI[uptime]: Uptime:
+LegendO[uptime]: Idle:
+Legend1[uptime]: Uptime secs
+Legend2[uptime]: Idle secs
+Legend3[uptime]: 
+Legend4[uptime]: 
+Colours[uptime]: CYAN#00cccc,VIOLET#ff00ff,RED#FF0000,GREEN#00FF00
+
+
+Target[sda]: `MRTG_DIR/mrtg_sysinfo.bash iostat-SDA`
+Options[sda]: growright,nobanner,nopercent
+Title[sda]: Disk Activity for SDA
+PageTop[sda]: <h1>Disk Activity for SDA</h1>
+MaxBytes[sda]: 500000000
+YLegend[sda]: Disk Activity
+ShortLegend[sda]: B/s
+kilo[sda]: 1024
+LegendI[sda]: Read:
+LegendO[sda]: Write:
+Legend1[sda]: Read
+Legend2[sda]: Write
+Legend3[sda]: 
+Legend4[sda]: 
+Colours[sda]: CYAN#00cccc,VIOLET#ff00ff,RED#FF0000,GREEN#00FF00
+
+
+Target[root]: `MRTG_DIR/mrtg_sysinfo.bash root`
+Options[root]: gauge,growright,nobanner
+Title[root]: Root Partition Usage
+PageTop[root]: <h1>Root Partition Usage</h1>
+MaxBytes[root]: ROOT_MAX
+YLegend[root]: Disk Usage
+ShortLegend[root]: B
+kilo[root]: 1024
+LegendI[root]: Used:
+LegendO[root]: Free:
+Legend1[root]: Used Disk
+Legend2[root]: Free Disk
+Legend3[root]: 
+Legend4[root]: 
+Colours[root]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[home]: `MRTG_DIR/mrtg_sysinfo.bash /home`
+Options[home]: gauge,growright,nobanner
+Title[home]: Home Partition Usage
+PageTop[home]: <h1>Home Partition Usage</h1>
+MaxBytes[home]: HOME_MAX
+YLegend[home]: Disk Usage
+ShortLegend[home]: B
+kilo[home]: 1024
+LegendI[home]: Used:
+LegendO[home]: Free:
+Legend1[home]: Used Disk
+Legend2[home]: Free Disk
+Legend3[home]: 
+Legend4[home]: 
+Colours[home]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[var]: `MRTG_DIR/mrtg_sysinfo.bash /var`
+Options[var]: gauge,growright,nobanner
+Title[var]: Var Partition Usage
+PageTop[var]: <h1>Var Partition Usage</h1>
+MaxBytes[var]: VAR_MAX
+YLegend[var]: Disk Usage
+ShortLegend[var]: B
+kilo[var]: 1024
+LegendI[var]: Used:
+LegendO[var]: Free:
+Legend1[var]: Used Disk
+Legend2[var]: Free Disk
+Legend3[var]: 
+Legend4[var]: 
+Colours[var]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[tmp]: `MRTG_DIR/mrtg_sysinfo.bash /tmp`
+Options[tmp]: gauge,growright,nobanner
+Title[tmp]: Tmp Partition Usage
+PageTop[tmp]: <h1>Tmp Partition Usage</h1>
+MaxBytes[tmp]: TMP_MAX
+YLegend[tmp]: Disk Usage
+ShortLegend[tmp]: B
+kilo[tmp]: 1024
+LegendI[tmp]: Used:
+LegendO[tmp]: Free:
+Legend1[tmp]: Used Disk
+Legend2[tmp]: Free Disk
+Legend3[tmp]: 
+Legend4[tmp]: 
+Colours[tmp]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[scratch]: `MRTG_DIR/mrtg_sysinfo.bash /scratch`
+Options[scratch]: gauge,growright,nobanner
+Title[scratch]: Scratch Partition Usage
+PageTop[scratch]: <h1>Scratch Partition Usage</h1>
+MaxBytes[scratch]: SCRATCH_MAX
+YLegend[scratch]: Disk Usage
+ShortLegend[scratch]: B
+kilo[scratch]: 1024
+LegendI[scratch]: Used:
+LegendO[scratch]: Free:
+Legend1[scratch]: Used Disk
+Legend2[scratch]: Free Disk
+Legend3[scratch]: 
+Legend4[scratch]: 
+Colours[scratch]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[data]: `MRTG_DIR/mrtg_sysinfo.bash /data`
+Options[data]: gauge,growright,nobanner
+Title[data]: Data Partition Usage
+PageTop[data]: <h1>Data Partition Usage</h1>
+MaxBytes[data]: DATA_MAX
+YLegend[data]: Disk Usage
+ShortLegend[data]: B
+kilo[data]: 1024
+LegendI[data]: Used:
+LegendO[data]: Free:
+Legend1[data]: Used Disk
+Legend2[data]: Free Disk
+Legend3[data]: 
+Legend4[data]: 
+Colours[data]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[iroot]: `MRTG_DIR/mrtg_sysinfo.bash iroot`
+Options[iroot]: gauge,growright,nobanner
+Title[iroot]: Root Inode Usage
+PageTop[iroot]: <h1>Root Inode Usage</h1>
+MaxBytes[iroot]: ROOT_IMAX
+YLegend[iroot]: Inode Usage
+ShortLegend[iroot]: I
+kilo[iroot]: 1000
+LegendI[iroot]: Used:
+LegendO[iroot]: Free:
+Legend1[iroot]: Used Inodes
+Legend2[iroot]: Free Inodes
+Legend3[iroot]: 
+Legend4[iroot]: 
+Colours[iroot]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[ihome]: `MRTG_DIR/mrtg_sysinfo.bash i/home`
+Options[ihome]: gauge,growright,nobanner
+Title[ihome]: Home Inode Usage
+PageTop[ihome]: <h1>Home Inode Usage</h1>
+MaxBytes[ihome]: HOME_IMAX
+YLegend[ihome]: Inode Usage
+ShortLegend[ihome]: I
+kilo[ihome]: 1000
+LegendI[ihome]: Used:
+LegendO[ihome]: Free:
+Legend1[ihome]: Used Inodes
+Legend2[ihome]: Free Inodes
+Legend3[ihome]: 
+Legend4[ihome]: 
+Colours[ihome]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[ivar]: `MRTG_DIR/mrtg_sysinfo.bash i/var`
+Options[ivar]: gauge,growright,nobanner
+Title[ivar]: Var Inode Usage
+PageTop[ivar]: <h1>Var Inode Usage</h1>
+MaxBytes[ivar]: VAR_IMAX
+YLegend[ivar]: Inode Usage
+ShortLegend[ivar]: I
+kilo[ivar]: 1000
+LegendI[ivar]: Used:
+LegendO[ivar]: Free:
+Legend1[ivar]: Used Inodes
+Legend2[ivar]: Free Inodes
+Legend3[ivar]: 
+Legend4[ivar]: 
+Colours[ivar]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[itmp]: `MRTG_DIR/mrtg_sysinfo.bash i/tmp`
+Options[itmp]: gauge,growright,nobanner
+Title[itmp]: Tmp Inode Usage
+PageTop[itmp]: <h1>Tmp Inode Usage</h1>
+MaxBytes[itmp]: TMP_IMAX
+YLegend[itmp]: Inode Usage
+ShortLegend[itmp]: I
+kilo[itmp]: 1000
+LegendI[itmp]: Used:
+LegendO[itmp]: Free:
+Legend1[itmp]: Used Inodes
+Legend2[itmp]: Free Inodes
+Legend3[itmp]: 
+Legend4[itmp]: 
+Colours[itmp]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[iscratch]: `MRTG_DIR/mrtg_sysinfo.bash i/scratch`
+Options[iscratch]: gauge,growright,nobanner
+Title[iscratch]: Scratch Inode Usage
+PageTop[iscratch]: <h1>Scratch Inode Usage</h1>
+MaxBytes[iscratch]: SCRATCH_IMAX
+YLegend[iscratch]: Inode Usage
+ShortLegend[iscratch]: I
+kilo[iscratch]: 1000
+LegendI[iscratch]: Used:
+LegendO[iscratch]: Free:
+Legend1[iscratch]: Used Inodes
+Legend2[iscratch]: Free Inodes
+Legend3[iscratch]: 
+Legend4[iscratch]: 
+Colours[iscratch]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+
+Target[idata]: `MRTG_DIR/mrtg_sysinfo.bash i/data`
+Options[idata]: gauge,growright,nobanner
+Title[idata]: Data Inode Usage
+PageTop[idata]: <h1>Data Inode Usage</h1>
+MaxBytes[idata]: DATA_IMAX
+YLegend[idata]: Inode Usage
+ShortLegend[idata]: I
+kilo[idata]: 1000
+LegendI[idata]: Used:
+LegendO[idata]: Free:
+Legend1[idata]: Used Inodes
+Legend2[idata]: Free Inodes
+Legend3[idata]: 
+Legend4[idata]: 
+Colours[idata]: RED#FF0000,GREEN#00FF00,DARK GREEN#006600,VIOLET#ff00ff
+
+

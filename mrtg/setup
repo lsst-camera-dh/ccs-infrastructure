@@ -1,0 +1,177 @@
+#!/bin/bash
+
+## Special cases to perhaps add by hand to mrtg.cfg:
+## temperature, daq interface traffic
+
+PD=${0%/*}
+[ "$PD" ] && cd "$PD"
+[ -e ./${0##*/} ] || {
+    echo "Cannot find source directory"
+    exit 1
+}
+
+shost=${HOSTNAME%%.*}
+
+
+for f in net-snmp mrtg pwgen patch; do
+    rpm -q --quiet $f || yum -q -y install $f
+done
+
+
+snmp_conf=/etc/snmp/snmpd.conf
+
+if grep -q lsstROgroup $snmp_conf; then
+    snmp_community=$(awk '$1 == "com2sec" {print $NF}' $snmp_conf)
+    systemctl enable --now snmpd
+else
+    snmp_community=$(pwgen -s 22 1)
+    if patch -p0 -b -z.ORIG -d / < snmpd.conf.diff; then
+        sed -i "s/SNMP_COMMUNITY/${snmp_community}/" /etc/snmp/snmpd.conf
+        systemctl enable --now snmpd
+    else
+        echo "WARNING: failed to patch snmpd.conf"
+    fi
+fi
+
+mrtg_user=mrtg
+mrtg_group=$mrtg_user
+
+getent passwd $mrtg_user >& /dev/null || \
+    /usr/sbin/adduser -c "MRTG logging account" --create-home $mrtg_user
+
+
+mrtg_home=$(getent passwd $mrtg_user | cut -d: -f6)
+
+mrtg_dir=$mrtg_home/mrtg
+mrtg_cfg=$mrtg_dir/mrtg.cfg
+mrtg_lock=$mrtg_dir/mrtg.lock
+mrtg_pid=$mrtg_dir/mrtg.pid
+mrtg_log=$mrtg_dir/mrtg.log
+mrtg_ok=$mrtg_dir/mrtg.ok
+
+sed -e "/^\[Service\]/a\
+User=$mrtg_user\n\
+Group=$mrtg_group\n\
+PIDFile=$mrtg_pid" -e \
+    "s|^ExecStart.*|ExecStart=/usr/bin/mrtg --daemon $mrtg_cfg --lock-file $mrtg_lock --confcache-file $mrtg_ok --pid-file $mrtg_pid --logging $mrtg_log|" \
+    /usr/lib/systemd/system/mrtg.service > /etc/systemd/system/mrtg.service
+
+
+chmod 755 $mrtg_home
+
+mkdir -p $mrtg_dir
+
+mkdir -p $mrtg_dir/html/{icons,images,logs}
+
+
+mrtg_sysinfo=$mrtg_dir/mrtg_sysinfo.bash
+
+[ -e $mrtg_sysinfo ] || cp ${mrtg_sysinfo##*/} $mrtg_sysinfo
+
+
+cfgfile=$mrtg_dir/eth.cfg
+
+## To restrict to "main" interface, eg: -if-filter='($if_ip =~ /^134/)'
+## This is chatty on stderr, so discard.
+cfgmaker --output=$cfgfile -ifref=ip \
+         $snmp_community@localhost 2> /dev/null || \
+    echo "WARNING: cfgmaker error"
+
+## The "primary" network interface, eg em1 or p4p1.
+iface_name=$(nmcli -g ip4.address,general.device dev show 2> /dev/null | \
+  gawk '/^(134|140|139)/ {getline; print $0; exit}')
+
+if [ "$iface_name" ]; then
+    iface_ip=$(sed -n "/Name: '$iface_name'/ s/.* Ip: '\([0-9.]*\).*/\1/p" $cfgfile)
+    ## Yuck.
+    iface_max=$(grep -A10 $iface_name $cfgfile | sed -n 's/.*MaxBytes.*: //p')
+    ## FIXME Happens with virtual machines.
+    [ "$iface_max" = 0 ] && iface_max=
+else
+    echo "WARNING: unable to determine primary network interface"
+    iface_name=eth0
+fi
+
+[ "$iface_ip" ] || iface_ip=127.0.0.1
+[ "$iface_max" ] || iface_max=125000000 # default to Gbit
+
+
+mem_max=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo)
+swap_max=$(awk '/SwapTotal/ {print $2 * 1024}' /proc/meminfo)
+
+## Eg replace sda with vda for virtual machines.
+sda=sda
+## FIXME not robust?
+[ -b /dev/sda ] || sda=$(lsblk | gawk '$NF == "disk" {print $1; exit}')
+
+sed -e "s/SNMP_COMMUNITY/${snmp_community}/" \
+    -e "s/HOSTNAME/${HOSTNAME}/" \
+    -e "s/IFACE_IP/${iface_ip}/" \
+    -e "s/IFACE_NAME/${iface_name}/" \
+    -e "s/IFACE_MAX/${iface_max}/" \
+    -e "s|MRTG_DIR|${mrtg_dir}|" \
+    -e "s/MEM_MAX/${mem_max}/" \
+    -e "s/SWAP_MAX/${swap_max}/" \
+    -e "s/SDA/${sda}/" \
+    mrtg.cfg.template > $mrtg_cfg
+
+
+disk_size () {
+    local disk=$1 flag=$2 output=size
+    [[ $flag == i* ]] && output=itotal
+    df -B1 --output=$output $disk | sed 1d
+}
+
+
+for disk in / /home /var /tmp /scratch /data; do
+
+    name=${disk#/}
+    [ "$name" ] || name=root
+    uname=$(echo "$name" | tr '[a-z]' '[A-Z]')
+
+    if mount | grep -q " $disk "; then
+        max=$(disk_size $disk)
+        imax=$(disk_size $disk inode)
+        sed -i -e "s/${uname}_MAX/$max/" -e "s/${uname}_IMAX/$imax/" $mrtg_cfg
+    else
+        ## Remove all [(i)name] lines.
+        sed -i -e "/\[i\?$name\]/d" $mrtg_cfg
+    fi
+done
+
+
+indexmaker --enumerate --compact --nolegend --prefix=html \
+           --title="MRTG Index Page for $shost" \
+           --pageend="<p>Back to <a href=\"../index.html\">index</a>" \
+           $mrtg_cfg --output $mrtg_dir/index.html
+
+
+chown -R mrtg:mrtg $mrtg_dir
+
+
+### SELinux
+
+## Not perfect, but to quieten AVCs.
+semanage fcontext -a -t mrtg_var_lib_t "$mrtg_dir(/.*)?"
+semanage fcontext -a -t mrtg_etc_t "${mrtg_cfg/./\\.}"
+semanage fcontext -a -t mrtg_lock_t "${mrtg_lock/./\\.}"
+semanage fcontext -a -t mrtg_log_t "${mrtg_log/./\\.}"
+semanage fcontext -a -t mrtg_var_run_t "${mrtg_pid/./\\.}"
+semanage fcontext -a -t bin_t "${mrtg_sysinfo/./\\.}"
+
+restorecon -R $mrtg_dir
+
+## To prevent complaints about monitoring free space in /tmp and /var
+mrtg_te=lsst-mrtg.te
+mrtg_mod=${mrtg_te%.*}.mod
+mrtg_pp=${mrtg_te%.*}.pp
+
+checkmodule -m -M -o $mrtg_mod $mrtg_te > /dev/null && \
+    semodule_package -o $mrtg_pp -m $mrtg_mod && \
+    semodule -i $mrtg_pp
+
+
+systemctl enable --now mrtg
+
+
+exit 0

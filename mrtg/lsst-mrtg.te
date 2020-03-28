@@ -1,0 +1,25 @@
+
+module lsst-mrtg 1.0;
+
+require {
+	type unlabeled_t;
+	type default_t;
+	type tmp_t;
+	type var_t;
+	type mrtg_t;
+	class dir read;
+}
+
+#============= mrtg_t ==============
+
+#!!!! WARNING: 'default_t' is a base type.
+allow mrtg_t default_t:dir read;
+
+#!!!! WARNING: 'default_t' is a base type.
+allow mrtg_t tmp_t:dir read;
+
+#!!!! WARNING: 'unlabeled_t' is a base type.
+allow mrtg_t unlabeled_t:dir read;
+
+#!!!! WARNING: 'var_t' is a base type.
+allow mrtg_t var_t:dir read;
