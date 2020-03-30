@@ -840,6 +840,9 @@ else
 fi
 
 
+./mrtg/setup || echo "WARNING: problem setting up mrtg"
+
+
 ### Host-specific stuff.
 
 ## Note, in RHEL8 we should be able to use ifcfg- files for this.
