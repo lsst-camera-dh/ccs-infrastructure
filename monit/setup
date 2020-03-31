@@ -87,6 +87,7 @@ function monit_disks () {
 case $my_system in
     slac)
         ## Ignoring: /boot, and in older installs: /scswork, /usr/vice/cache.
+        ## FIXME vi do not have separate /tmp.
         monit_disks="/ /tmp"
         ## dc nodes have /data.
         ## Older installs have separate /opt /scratch /var.
@@ -149,7 +150,8 @@ f=$monitd/hosts
     f=$monitd/inlet-temp
     [ -e $f ] || cp ${f##*/} $f
 
-    cp monit_inlet_temp /usr/local/bin
+    f=/usr/local/bin/monit_inlet_temp
+    cmp -s ${f##*/} $f || cp ${f##*/} $f
 }
 
 
@@ -182,7 +184,9 @@ f=$monitd/network
 [[ $shost == *-vi* ]] || [ -e $f ] || \
     sed "s/ETH0/$eth0/g" ${f##*/}.template > $f
 
-cp monit_netspeed /usr/local/bin
+
+f=/usr/local/bin/monit_netspeed
+cmp -s ${f##*/} $f || cp ${f##*/} $f
 
 
 case $shost in
@@ -192,7 +196,8 @@ case $shost in
         [ -e $f ] || cp ${f##*/} $f
 
         ## Needs the raid utility (eg perccli64) to be installed separately.
-        cp monit_hwraid /usr/local/bin
+        f=/usr/local/bin/monit_hwraid
+        cmp -s ${f##*/} $f || cp ${f##*/} $f
     ;;
 esac
 
