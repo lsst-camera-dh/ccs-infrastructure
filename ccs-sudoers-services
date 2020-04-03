@@ -109,6 +109,7 @@ if [ $# -eq 0 ]; then
     rm -f $outfile
 else
     cp $tempfile $outfile
+    chmod 440 $outfile
 fi
 
 

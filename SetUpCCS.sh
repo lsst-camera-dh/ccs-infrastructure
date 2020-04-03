@@ -263,6 +263,9 @@ getent passwd dh >& /dev/null && {
     grep -q "^$sudo_opt" $f || echo "$sudo_opt" >> $f
 }
 
+chmod 440 $f
+
+
 [ $my_system = slac ] && {
 
     sudoers="gmorris marshall tonyj turri"
@@ -270,6 +273,7 @@ getent passwd dh >& /dev/null && {
         f=/etc/sudoers.d/user-$u
         [ -e $f ] && continue
         echo "$u   ALL=ALL" > $f
+        chmod 440 $f
     done
 }                               # my_system = slac
 
@@ -584,6 +588,9 @@ rpm --quiet -q gdm && {
     rpm -q --quiet x2goclient || \
         yum -q -y install x2goclient x2goserver x2godesktopsharing || true
 }
+
+f=/etc/sudoers.d/x2goserver
+[ -e $f ] && chmod 440 $f
 
 
 ## cron
