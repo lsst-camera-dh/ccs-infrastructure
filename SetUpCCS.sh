@@ -852,17 +852,11 @@ esac
 ## https://confluence.slac.stanford.edu/display/LSSTCAM/JGroups+Tuning+and+Performance
 ## FIXME change value for daq and other hosts. Do not replace prior value.
 f=/etc/sysctl.d/99-lsst-daq-ccs.conf
-[ -e $f ] || touch $f
+[ -e $f ] || {
+    cp ./sysctl/${f##*/} $f
 
-value=18874368
-
-for v in net.core.{wmem,rmem}_max; do
-    grep -q "$v *= *$value" $f && continue
-    sed -i "/$v/d" $f
-    echo "$v = $value" >> $f
-
-    /usr/sbin/sysctl -w $v=$value
-done
+    /usr/sbin/sysctl -p $f
+}
 
 
 ## Graphics drivers.
