@@ -823,10 +823,11 @@ esac
     ## https://openjfx.io/openjfx-docs/#install-javafx
     jfxver=$jdkver              # coincidence?
     jfxzip=$pkgarchive/openjfx-${jfxver}_linux-x64_bin-sdk.zip
+    jfxdest=$jvmdir/javafx-sdk-$jfxver
 
     ## TODO To use this, we need to add to the java command line:
     ## -p $jvmdir/javafx-sdk-$jfxver/lib --add-modules javafx.controls
-    [ -e $jvmdir/javafx-sdk-$jfxver ] || {
+    [ -e $jfxdest ] || {
         if [ -e $jfxzip ]; then
             unzip -q -d $jvmdir $jfxzip
         else
@@ -841,7 +842,8 @@ esac
         printf "export PATH=$jvmdir/jdk-$jdkver/bin:\$PATH\n" > $jdkccs
 
     f=/etc/ccs/ccs-console.app
-    [ -e $f ] || sed "s/JDKCCS/${jdkccs##*/}/" ./ccs/${f##*/}.template > $f
+    [ -e $f ] || sed -e "s|JFXLIB|${jfxdest}/lib|" \
+                     -e "s/JDKCCS/${jdkccs##*/}/" ./ccs/${f##*/}.template > $f
 }                               # lsst-vw01
 
 
