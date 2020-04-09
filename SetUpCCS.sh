@@ -305,38 +305,18 @@ rpm --quiet -q autofs || yum -q -y install autofs
         grep -q "PRUNEPATHS.*/gpfs " /etc/updatedb.conf || \
             sed -i.ORIG 's|^\(PRUNEPATHS = "\)|\1/gpfs |' /etc/updatedb.conf
 
-        auto_gpfs=/etc/auto.gpfs
-
-        [ -e $auto_gpfs ] || cat <<EOF > $auto_gpfs
-#
-# This is an automounter map and it has the following format
-# key [ -mount-options-separated-by-comma ] location
-# Details may be found in the autofs(5) manpage
-
-EOF
-
-        ## It would be nicer to only use eg "fs1" (rather than "fs1/g"),
+        ## It would be nicer to only use eg "fs1" (rather than "fs1/g") here,
         ## but it seems as if the server is not set up to allow that.
         ## (Maybe this is an nfs3 issue?)
-        for f in fs1/g fs2/u1 fs3/g; do
+        f=/etc/auto.gpfs
+        [ -e $f ] || cp ./autofs/${f##*/} $f
 
-            h=lsst-ss01
-
-            case $f in
-                fs3*) h=lsst-ss02 ;;    # note different host for this one
-            esac
-
-            f=/gpfs/slac/lsst/$f
-
-            mount | grep -q $f && umount $f
-
-            mkdir -p ${f%/*}
-
-            grep -q "^$f" $auto_gpfs && continue
-
-            printf "%-30s %s\n" "$f" "$h.slac.stanford.edu:&" >> $auto_gpfs
-
-        done
+        while read mount rest; do
+            [[ $mount == /gpfs* ]] || continue
+            mount | grep -q $mount && umount $mount
+            ## Not necessary.
+            #mkdir -p ${mount%/*}
+        done < $f
 
 
         gpfs_autofs=/etc/auto.master.d/gpfs.autofs
