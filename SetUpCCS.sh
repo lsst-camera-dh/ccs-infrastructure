@@ -319,10 +319,6 @@ rpm --quiet -q autofs || yum -q -y install autofs
         done < $f
 
 
-        gpfs_autofs=/etc/auto.master.d/gpfs.autofs
-
-        [ -e $gpfs_autofs ] || touch $gpfs_autofs
-
         ## NB need vers=3 to avoid problems with (bonded) wifi.
         case $shost in
             *-aio*) opt="  vers=3" ;;
@@ -335,8 +331,10 @@ rpm --quiet -q autofs || yum -q -y install autofs
         ## 201916: Avoid Ganesha nfsv4 lease bug. SLAC INC0239891.
         opt="  vers=3"
 
-        grep -q $auto_gpfs $gpfs_autofs || \
-            echo "/-	${auto_gpfs}${opt}" >> $gpfs_autofs
+        f=/etc/auto.master.d/gpfs.autofs
+
+        [ -e $f ] || \
+            sed "s/OPTIONS/${opt}/" ./autofs/${f##*/}.template > $f
 
 
         ## Remove "sss" so as to avoid a bunch of SLAC NFS that we don't want.
