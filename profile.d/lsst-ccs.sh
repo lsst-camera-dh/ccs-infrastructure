@@ -5,5 +5,5 @@ export OMP_NUM_THREADS=1
 
 # Add /lsst/ccs/prod/bin to PATH if not present.
 _dir=/lsst/ccs/prod/bin
-[ -e $dir ] && [[ $PATH != *$_dir* ]] && PATH=$_dir:$PATH
+[ -e $_dir ] && [[ $PATH != *$_dir* ]] && PATH=$_dir:$PATH
 unset _dir
