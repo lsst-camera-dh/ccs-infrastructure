@@ -373,7 +373,9 @@ jdkrpm=$pkgarchive/jdk-8u112-linux-x64.rpm
 
 if [ -e $jdkrpm ]; then
 
+    ## 1.8.0_112
     javaver=$(rpm -qi -p ${jdkrpm} | gawk '/^Version/ {print $3}';)
+    ## jdk1.8.0_112-1.8.0_112-fcs.x86_64
     javapkg=$(rpm -q -p ${jdkrpm})
     rpm --quiet -q ${javapkg} || rpm -i ${jdkrpm} > /dev/null
     java -version 2>&1 | grep -q -F ${javaver} || {
@@ -555,7 +557,7 @@ done
 ## FIXME not a great icon.
 f=/usr/share/icons/lsst_appicon.png
 mkdir -p ${f%/*}
-[ -e $f ] || cp ./lsst_appicon.png $f
+[ -e $f ] || cp ./desktop/lsst_appicon.png $f
 
 
 ## EPEL
