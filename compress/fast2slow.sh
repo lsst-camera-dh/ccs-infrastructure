@@ -106,7 +106,8 @@ function doit () {
     if [ ! "$compress" ]; then
         docopy=t
     else
-        find "$src" -type f -name '*.fits' \
+        ## FIXME this duplicates compress_directory.
+        find "$src" -type f -name '*.fits' -size +0 \
             -exec find-fpack.sh '{}' + > $logfits
 
         [ -s $logfits ] || {
@@ -129,15 +130,24 @@ function doit () {
 
         parallel --joblog $logjob -j 8 \
             fpackafile_attr.sh -d $tempdest < $logfits > $logout || {
-	    rmdir $tempdest >& /dev/null # if empty
+	        rmdir $tempdest >& /dev/null # if empty
             die "Failed compressing $src"
-	}
-
+	    }
         rm -f $logfits
+
+        ## Yuck.
+        find "$src" -type f -name '*.fits' -size 0 \
+            -exec cp -a -t $tempdest '{}' + || \
+            die "error copying empty fits files from $src"
+
+        find "$src" -type f ! -name '*.fits' \
+            -exec cp -a -t $tempdest '{}' + || \
+            die "error copying non-fits files from $src"
+
     fi
 
 
-    { rm -f $dest && mv $tempdest $dest ; } || die "rename error for $dest"
+    { rm $dest && mv $tempdest $dest ; } || die "rename error for $dest"
     ## On failure, should we restore dest and delete tempdest?
 
     [ ! "$purge" ] || rm -rf $src || die "error deleting $src"
