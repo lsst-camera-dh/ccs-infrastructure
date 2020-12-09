@@ -70,10 +70,15 @@ for dir; do
         continue
     }
 
-    grep -q "^${dir%/*} " $compressfile && {
+    parent="${dir%/*}"
+
+    grep -q "^$parent " $compressfile && {
         echo "Already done parent: $dir"
         continue
     }
+
+#    symlink=
+#    [ -L "$parent" ] && symlink=t
 
     size0=$(du -sm "$dir" | cut -f1)
 
@@ -81,7 +86,9 @@ for dir; do
     ##   find ... \( -exec fpack-test.sh '{}' \; -print \) | \
     ##     xargs -n1 -P4 fpackafile_attr.sh
     ### where fpack-test.sh returns 0 if file is not already compressed.
-    find "$dir" -type f -name '*.fits' -exec find-fpack.sh '{}' + > $logfits
+    ## Skip empty files.
+    find "$dir" -type f -name '*.fits' -size +0 \
+         -exec find-fpack.sh '{}' + > $logfits
 
     [ -s $logfits ] || {
         rm -f $logfits
