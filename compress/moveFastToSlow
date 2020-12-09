@@ -1,0 +1,37 @@
+#!/bin/bash
+
+base=/gpfs/slac/lsst/fs3/g/fast/rawData/focal-plane
+
+## FIXME this will miss files if not run to completion every day.
+## Why not operate on everything? We don't expect to be leaving files
+## in the fast partition.
+yesterday=$(date -d "yesterday 13:00" '+%Y%m%d')
+
+lockfile=/tmp/movefast2slow.lock
+
+if [ -e $lockfile ]; then
+    echo "$lockfile exists" 1>&2
+    exit 1
+else
+    echo $$ > $lockfile
+    trap "rm -f $lockfile" EXIT
+fi
+
+
+shopt -s nullglob
+
+## TODO or just operate on all directories?
+for dir in $base/$yesterday/??_C_*; do
+
+    [ -d "$dir" ] || continue
+
+    /home/ccs/ccs-infrastructure/compress/fast2slow.sh "$dir" && continue
+
+    ## Abort if there was an error (eg out of space), rather than
+    ## relentlessly continuing.
+    echo "Error doing $dir" 1>&2
+    exit 1
+
+done
+
+exit 0
