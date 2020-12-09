@@ -130,9 +130,9 @@ function doit () {
 
         parallel --joblog $logjob -j 8 \
             fpackafile_attr.sh -d $tempdest < $logfits > $logout || {
-	        rmdir $tempdest >& /dev/null # if empty
+            rmdir $tempdest >& /dev/null # if empty
             die "Failed compressing $src"
-	    }
+        }
         rm -f $logfits
 
         ## Yuck.
@@ -172,8 +172,8 @@ if [ "$1" == "ALL" ]; then      # operate on everything
 
 else
     for src; do
-	[[ $src == /* ]] || src=$PWD/$src
-	doit "$src"
+        [[ $src == /* ]] || src=$PWD/$src
+        doit "$src"
     done
 fi
 
