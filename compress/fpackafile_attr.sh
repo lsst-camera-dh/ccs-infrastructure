@@ -7,6 +7,7 @@
 ## This version has -O (added in 3.46).
 FPACK=/gpfs/slac/lsst/fs2/u1/devel/gmorris/cfitsio/bin/fpack # 3.47
 FOPTS="-g2"
+FCHECK=/gpfs/slac/lsst/fs2/u1/dh/software/centos7-gcc48/anaconda3/bin/fitscheck
 
 outdir=
 [ "$1" = "-d" ] && {
@@ -25,7 +26,17 @@ fi
 ## Compress the file.
 ## If the argument to -O is too long, use -S to send to stdout instead.
 $FPACK $FOPTS ${outdir:+-O $outfile} $fitsfile || {
+
     rt=$?
+
+    ## Compression failed. If this is not a valid fits file,
+    ## rename it and continue to the next. If it is valid, abort.
+    $FCHECK $fitsfile >& /dev/null || {
+        rm -f $outfile
+        mv $fitsfile $fitsfile.BAD
+        exit 0
+    }
+
     echo "fpack error: returned $rt"
     exit $rt
 }
