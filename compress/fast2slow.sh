@@ -9,7 +9,7 @@
 ### Options.
 
 ## If non-empty compress, else copy.
-compress=t
+compress=
 ## If non-empty delete originals.
 purge=t
 ## If non-empty, ALL operates on focal-plane.TEST
@@ -41,12 +41,15 @@ function die ()
 
 PATH=$HOME/ccs-infrastructure/compress:$PATH
 
+## TODO if compress is unset, we are not compressing, so this isn't
+## really the right log directory.
 logdir=$HOME/compress
 mkdir -p $logdir
 
 logbase=$logdir/$(date +%Y%m%d-%H%M%S)
 
 logfile=$logbase.log
+exec 3>&1 4>&2
 exec 1> $logfile 2>&1
 
 logfits=$logbase.txt
@@ -163,6 +166,12 @@ else
 	doit "$src"
     done
 fi
+
+
+exec 1>&3 2>&4 3>&- 4>&-
+
+## Avoid leaving empty log files.
+[ -s $logfile ] || rm -f $logfile
 
 
 exit 0
