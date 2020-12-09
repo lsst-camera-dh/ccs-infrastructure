@@ -1,0 +1,97 @@
+#!/bin/bash
+### ccslog
+###
+### *Creation: <Tue 11-Aug-2020 11:39:57 gmorris on lsst-it01.slac.stanford.edu>*
+###
+### Find the most recent CCS log file for a given CCS system.
+### Eg: ccslog -p thermal
+
+
+PN=${0##*/}
+
+
+function usage ()
+{
+    cat 1>&2 <<EOF
+Usage: ${PN} [-p] [-t] <system>
+Find the most recent CCS log file for SYSTEM (eg focal-plane).
+Options:
+-p: Just print the name of the log file
+-t: Run tail -f on the log file
+EOF
+    exit 1
+}
+
+
+function die ()
+{
+    [ $# -gt 0 ] && echo "$PN: $*" 1>&2
+    exit 1
+}
+
+
+## Defaults.
+tail=
+
+## Parameters.
+logdir=/var/log/ccs
+
+
+while getopts ":hpt" option; do
+    case $option in
+        (h) usage ;;
+
+        (p) print=1 ;;
+
+        (t) tail=1 ;;
+
+        (\?) die "Bad option -$OPTARG" ;;
+
+        (:) die "Option -$OPTARG requires an argument" ;;
+
+        (*) die "getopts error" ;;
+    esac
+done
+shift $(( --OPTIND ))
+OPTIND=1
+
+
+{ [ -d "$logdir" ] && [ -r "$logdir" ] ;} || die "$logdir not readable"
+
+
+[ $# -eq 1 ] || die "Wrong number of arguments"
+
+
+system=$1
+
+shopt -s extglob
+
+# shellcheck disable=SC2046
+set -- $(ls -t "$logdir"/ccs-logs-"$system"*.log?(.+([0-9.])) 2> /dev/null)
+
+[ $# -eq 0 ] && die "No log files match \"$system\""
+
+recent=$1
+
+cat="cat"
+tailopt="-f"
+
+[[ $recent == *.gz ]] && {
+    cat="zcat"
+    tailopt=
+}
+
+if [ "$print" ]; then
+    echo "$recent"
+elif [ "$tail" ]; then
+    exec tail "$tailopt" "$recent"
+else
+    $cat "$recent"
+fi
+
+
+exit 0
+
+
+
+### ccslog ends here
