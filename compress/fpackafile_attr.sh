@@ -23,6 +23,12 @@ else
     outfile=$fitsfile.fz        # temporary, gets renamed over input
 fi
 
+## Eg some old files already had .fz versions.
+[ -e $outfile ] && {
+    echo "Output file already exists, skipping: $outfile"
+    exit 0
+}
+
 ## Compress the file.
 ## If the argument to -O is too long, use -S to send to stdout instead.
 $FPACK $FOPTS ${outdir:+-O $outfile} $fitsfile || {
