@@ -31,7 +31,7 @@ while read ip; do
         139.229.174.*) my_system=chile ;;
     esac
     [ "$my_system" ] && break
-done < <(hostname -I)
+done < <(hostname -I | tr ' ' '\n')
 
 if [ "$my_system" ]; then
     echo "my_system = $my_system"
