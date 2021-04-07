@@ -45,9 +45,9 @@ compress () {
     [[ $log == *.gz ]] && return 0 # don't recompress
     ## If log.gz already exists, let's not abort. Better than using gzip -f.
     ## TODO compress to ${log}_#.gz instead?
-    [ -e $log.gz ] && return 0
-    let ncompress++
-    gzip $log
+    [ -e "$log.gz" ] && return 0
+    (( ncompress++ ))
+    gzip "$log"
 }
 
 
@@ -58,13 +58,13 @@ archive () {
 
     ## Only archive compressed files.
     [[ $log == *.gz ]] || {
-        compress $log || return $?
+        compress "$log" || return $?
         log=$log.gz
     }
 
     case $archive_flag in
         d)
-            ${DEBUG:+echo} rm $log
+            ${DEBUG:+echo} rm "$log"
             return $? ;;
         m)
             [ -d ${archive_dir%/*} ] || {
@@ -74,9 +74,9 @@ archive () {
             }
             ## TODO option to use rsync instead.
             local dest=$archive_dir/${HOSTNAME%%.*}
-            mkdir -p $dest || return 1
-            let narchive++
-            ${DEBUG:+echo} mv $log $dest
+            mkdir -p "$dest" || return 1
+            (( narchive++ ))
+            ${DEBUG:+echo} mv "$log" "$dest"
             return $?
             ;;
         *)
@@ -86,9 +86,9 @@ archive () {
 
 
 exitfunc () {
-    rm -f $lockfile
-    [ $ncompress -gt 0 ] && echo "Compressed $ncompress"
-    [ $narchive -gt 0 ] && echo "Archived $narchive"
+    rm -f "$lockfile"
+    [ "$ncompress" -gt 0 ] && echo "Compressed $ncompress"
+    [ "$narchive" -gt 0 ] && echo "Archived $narchive"
     return 0
 }
 
@@ -100,15 +100,15 @@ cd $logdir || die "cd $logdir error"
 
 lockfile=$logdir/.$PN.lock
 
-if [ -e $lockfile ]; then
+if [ -e "$lockfile" ]; then
     die "$lockfile exists"
 else
-    echo $$ > $lockfile
+    echo $$ > "$lockfile"
     trap exitfunc EXIT
 fi
 
 
-exec > $logdir/$PN.log 2>&1
+exec > "$logdir/$PN.log" 2>&1
 
 
 renice $nice_level $$ > /dev/null
@@ -117,22 +117,22 @@ renice $nice_level $$ > /dev/null
 shopt -s extglob
 
 
-for ((n=$min_days; n<=$max_days; n++)); do
+for ((n=min_days; n<=max_days; n++)); do
 
     olddate=$(date "$dformat" -d "$n days ago")
 
     ## Avoid *.lck files (perhaps we should delete old ones?).
-    for log in ccs-logs-*$olddate.log.+([0-9.])?(.gz); do
+    for log in ccs-logs-*"$olddate".log.+([0-9.])?(.gz); do
 
         [ -e "$log" ] || break
 
         ## TODO skip if .lck exists?
 ###        [ e $log.lck ] && continue
 
-        if [ $n -gt $archive_days ]; then
-            archive $log || die "error archiving $log"
+        if [ "$n" -gt $archive_days ]; then
+            archive "$log" || die "error archiving $log"
         else
-            compress $log || die "error compressing $log"
+            compress "$log" || die "error compressing $log"
         fi
     done                        # $log
 

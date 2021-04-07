@@ -15,7 +15,7 @@ PN=${0##*/}
 umask 077
 
 tempfile=/tmp/$PN.$$
-trap "rm -f $tempfile 2> /dev/null" EXIT
+trap 'rm -f $tempfile 2> /dev/null' EXIT
 
 ## Any user can get basic information from "status", but adding
 ## it here allows more detailed output (from the journal).
@@ -27,14 +27,14 @@ function find_services ()
     local sdir=/etc/systemd/system
     local s service
 
-    while read s; do
+    while read -r s; do
 
         [ -e "$s" ] || break
 
         service=${s##*/}
         service=${service%.*}   #  eg vis-server
 
-        echo $service
+        echo "$service"
 
     done < <( find $sdir -maxdepth 1 -name '*.service' -exec grep -l 'User=ccs' {} + | sort)
 
@@ -45,14 +45,14 @@ function find_services ()
 ## Convert a service name to a suitable sudo alias name.
 function aliasname ()
 {
-    echo "$@" | tr '[a-z]' '[A-Z]' | tr '-' '_'
+    echo "$@" | tr '[:lower:]' '[:upper:]' | tr '-' '_'
 }
 
 
 set -- $(find_services)
 
 exec 3>&1
-exec > $tempfile
+exec > "$tempfile"
 
 ## Do not add a date stamp, it would defeat cmp below.
 ## We could used diff -I, but not worth it.
@@ -64,7 +64,7 @@ EOF
 
 for s; do
 
-    u=$(aliasname $s)
+    u=$(aliasname "$s")
 
     printf "Cmnd_Alias %s =" "$u"
 
@@ -82,16 +82,16 @@ done
 
 for s; do
 
-    u=$(aliasname $s)
+    u=$(aliasname "$s")
 
-    printf "ccs ALL= NOPASSWD: $u\n"
+    printf "ccs ALL= NOPASSWD: %s\n" "$u"
 
 done
 
 exec 1>&3 3>&-
 
 
-cmp -s $tempfile $outfile && exit 0
+cmp -s "$tempfile" $outfile && exit 0
 
 
 [ -e $outfile ] && {
@@ -101,14 +101,14 @@ cmp -s $tempfile $outfile && exit 0
     backup=${outfile%/*}/.${outfile##*/}.$suffix
 
     ## TODO prune backups.
-    cp -a $outfile $backup
+    cp -a $outfile "$backup"
 }
 
 
 if [ $# -eq 0 ]; then
     rm -f $outfile
 else
-    cp $tempfile $outfile
+    cp "$tempfile" $outfile
     chmod 440 $outfile
 fi
 
