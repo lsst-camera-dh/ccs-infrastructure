@@ -737,7 +737,7 @@ AutomaticLoginEnable=true' /etc/gdm/custom.conf
 
         ;;
 
-    *fcs[0-9][0-9]|lsst-lion18)
+    *fcs[0-9][0-9]|lsst-lion18|lsst-lion03)
         ./lion_canbus/setup
         ;;
 
