@@ -19,9 +19,9 @@ src=/lnfs/lsst/pkgarchive/${module}_V${version}_dkms.tar.xz
 
 if [ -r $src ]; then
 
-    [ -e /usr/src/$module-$version ] || tar -C /usr/src -axf $src
-
     module=$(echo $module | tr '[A-Z]' '[a-z]')
+
+    [ -e /usr/src/$module-$version ] || tar -C /usr/src -axf $src
 
     ## TODO skip if already present in dkms status?
     for f in add build install; do
