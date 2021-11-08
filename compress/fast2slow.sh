@@ -147,8 +147,17 @@ function doit () {
     fi
 
 
-    { rm $dest && mv $tempdest $dest ; } || die "rename error for $dest"
+    { if [ -L $dest ]; then
+          rm $dest
+      elif [ ! -e $dest ]; then
+          echo "Warning: $dest not present (expected symlink)"
+          :
+      else
+          die "ERROR: $dest exists but is not a symlink"
+          false
+      fi && mv $tempdest $dest ; } || die "rename error for $dest"
     ## On failure, should we restore dest and delete tempdest?
+    ## I think not, since it makes it clearer where we failed.
 
     [ ! "$purge" ] || rm -rf $src || die "error deleting $src"
 
