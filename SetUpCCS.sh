@@ -370,7 +370,7 @@ esac
 
 #- install the correct java from nfs
 
-jdkrpm=$pkgarchive/jdk-8u112-linux-x64.rpm
+jdkrpm=$pkgarchive/jdk-8u202-linux-x64.rpm
 
 if [ -e $jdkrpm ]; then
 
