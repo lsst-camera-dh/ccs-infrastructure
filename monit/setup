@@ -156,10 +156,11 @@ f=$monitd/hosts
 
 
 ## Note that the use of "per core" requires monit >= 5.26.
-## As of 2019/09, the epel7 version is 5.25.1.
-## This requires us to install a newer version in /usr/local/bin,
+## As of 2019/09, the epel7 version was 5.25.1.
+## This required us to install a newer version in /usr/local/bin,
 ## and modify the service file, but it does mean the config file can
 ## be identical for all hosts.
+## The epel version was updated 2020/03, so this is no longer needed.
 ## swap warning is not very useful, since Linux doesn't usually free swap.
 ## Maybe it should just be removed?
 f=$monitd/system
@@ -202,21 +203,23 @@ case $shost in
 esac
 
 
-[ -e /etc/systemd/system/monit.service ] || \
-    sed 's|/usr/bin/monit|/usr/local/bin/monit|g' \
-        /usr/lib/systemd/system/monit.service > \
-        /etc/systemd/system/monit.service
+### [ -e /etc/systemd/system/monit.service ] || \
+###     sed 's|/usr/bin/monit|/usr/local/bin/monit|g' \
+###         /usr/lib/systemd/system/monit.service > \
+###         /etc/systemd/system/monit.service
 
 systemctl -q is-enabled monit || systemctl enable monit
 
 ## Note that we configure this monit with --prefix=/usr so that
 ## it consults /etc/monitrc, and install just the binary by hand.
-if [ -e /usr/local/bin/monit ] || \
-       cp -p $pkgarchive/monit /usr/local/bin/monit; then
-    systemctl start monit
-else
-    echo "TODO: install /usr/local/bin/monit and start service"
-fi
+### if [ -e /usr/local/bin/monit ] || \
+###        cp -p $pkgarchive/monit /usr/local/bin/monit; then
+###     systemctl start monit
+### else
+###     echo "TODO: install /usr/local/bin/monit and start service"
+### fi
+
+systemctl start monit
 
 
 exit 0
