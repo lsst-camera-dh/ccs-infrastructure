@@ -134,7 +134,7 @@ case $my_system in
         yum group list installed | grep -qi "$gnome" || {
             echo "Installing gnome"
             yum -q -y groups install "$gnome"
-            yum clean all
+            yum clean all >& /dev/null
         }
         ;;
 
@@ -443,11 +443,8 @@ rpm --quiet -q gdm && {
         yum -q -y remove gnome-initial-setup
 }
 
-for s in initial-setup-graphical initial-setup-text; do
-    systemctl list-unit-files | grep -q $s || continue
-    systemctl disable $s
-done
-
+[ $release -le 7 ] && \
+    systemctl disable initial-setup-graphical initial-setup-text
 
 ## TODO does this still work in rhel9?
 getenforce 2> /dev/null | grep -qi Enforcing && setenforce 0
