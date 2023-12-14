@@ -68,6 +68,26 @@ case $my_system in
             for f in gcc g++ libffi-devel; do
                 rpm --quiet -q $f || yum -q -y install $f
             done
+
+            ## TODO is there a better way to accept the license?
+            licdir=/etc/chef/accepted_licenses
+            licfile=$licdir/chef_workstation
+
+            [ -e $licfile ] || {
+
+                licver=5.6.12
+                for f in /opt/chef-workstation/embedded/lib/ruby/gems/*/gems/chef-cli-*; do
+                    [ -e $f ] || continue
+                    licver=${f##*-}
+                    break
+                done
+
+                sed -e 's/infra-client/chef-workstation/g' \
+                    -e 's/Infra Client/Workstation/g' \
+                    -e "/product_version/ s/ [0-9.]*\$/ $licver/" \
+                    $licdir/chef_infra_client > $licfile
+            }
+
             chef gem install knife-attribute
         }
 
