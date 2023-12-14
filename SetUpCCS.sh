@@ -20,6 +20,10 @@ PD=${0%/*}
     exit 1
 }
 
+release_full=$(cat /etc/redhat-release)
+release=${release_full##* release }
+release=${release%%.*}
+
 shost=${HOSTNAME%%.*}
 
 my_system=
@@ -60,6 +64,13 @@ case $my_system in
         tempfile=/tmp/${0##*/}.$$
         trap "rm -f $tempfile" EXIT
 
+        [ $release -gt 7 ] && {
+            for f in gcc g++ libffi-devel; do
+                rpm --quiet -q $f || yum -q -y install $f
+            done
+            chef gem install knife-attribute
+        }
+
         knife node show $fhost -Fjson > $tempfile
 
         ## This sets: limit_login, yum_should, kernel_updatedefault.
@@ -96,9 +107,13 @@ case $my_system in
         ## Although people sometimes want to eg use vnc,
         ## so it does end up being needed on servers too.
         ## "Server with GUI" instead? Not much smaller.
-        yum group list installed | grep -qi "GNOME Desktop" || {
+        gnome=GNOME
+        [ $release -eq 7 ] && gnome='GNOME Desktop'
+
+        ## FIXME list installed does not work on rhel9?
+        yum group list installed | grep -qi "$gnome" || {
             echo "Installing gnome"
-            yum -q -y groups install "GNOME Desktop"
+            yum -q -y groups install "$gnome"
             yum clean all
         }
         ;;
@@ -115,10 +130,14 @@ esac
 
 # TODO: maven is only needed on "development" machines,
 # but exactly what these are is not yet defined.
-for f in epel-release git rsync emacs chrony nano ntp screen sysstat unzip \
+packages=
+[ $release -eq 7 ] && \
+    packages="ntp devtoolset-8 centos-release-scl-rh rh-git218"
+
+
+for f in epel-release git rsync emacs chrony nano screen sysstat unzip \
       kernel-headers kernel-devel clustershell maven \
-      attr parallel gcc devtoolset-8 dkms usbutils \
-      centos-release-scl-rh rh-git218; do
+      attr parallel gcc dkms usbutils $packages; do
     rpm --quiet -q $f || yum -q -y install $f
 done
 
@@ -132,7 +151,7 @@ rpm --quiet -q clustershell && \
 
 ## Ultimately ptp will replace this.
 case $my_system in
-    slac) systemctl disable chronyd ;; # slac uses ntpd
+    slac) [ $release -gt 7 ] || systemctl disable chronyd ;; # slac uses ntpd
     ## TODO: make sure clock is approximately correct first?
     ## FIXME tucson was using chrony originally, then switched some
     ## hosts to ntp.
@@ -404,9 +423,13 @@ rpm --quiet -q gdm && {
         yum -q -y remove gnome-initial-setup
 }
 
-systemctl disable initial-setup-graphical initial-setup-text
+for s in initial-setup-graphical initial-setup-text; do
+    systemctl list-unit-files | grep -q $s || continue
+    systemctl disable $s
+done
 
 
+## TODO does this still work in rhel9?
 getenforce 2> /dev/null | grep -qi Enforcing && setenforce 0
 grep -q "SELINUX=enforcing" /etc/selinux/config && \
     sed -i.ORIG -e 's/=enforcing/=permissive/' /etc/selinux/config
