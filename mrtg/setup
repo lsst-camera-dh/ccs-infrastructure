@@ -13,7 +13,7 @@ PD=${0%/*}
 shost=${HOSTNAME%%.*}
 
 
-for f in net-snmp mrtg pwgen patch; do
+for f in net-snmp mrtg pwgen patch perl-Time-HiRes; do
     rpm -q --quiet $f || yum -q -y install $f
 done
 
