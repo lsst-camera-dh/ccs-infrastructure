@@ -415,16 +415,18 @@ jdkrpm=$pkgarchive/jdk-8u202-linux-x64.rpm
 
 if [ -e $jdkrpm ]; then
 
-    ## 1.8.0_112
+    ## 1.8.0_202
     javaver=$(rpm -qi -p ${jdkrpm} | gawk '/^Version/ {print $3}';)
-    ## jdk1.8.0_112-1.8.0_112-fcs.x86_64
+    ## jdk1.8-1.8.0_202-fcs.x86_64
     javapkg=$(rpm -q -p ${jdkrpm})
     rpm --quiet -q ${javapkg} || rpm -i ${jdkrpm} > /dev/null
     java -version 2>&1 | grep -q -F ${javaver} || {
+        ## TODO the -amd64 suffux added some point between 112 and 202.
+        javadir=/usr/java/jdk${javaver}-amd64
         for cmd in java javac javaws jar jconsole jstack; do
             update-alternatives --install /usr/bin/${cmd} ${cmd} \
-                                /usr/java/jdk${javaver}/bin/${cmd} 1000
-            update-alternatives --set ${cmd} /usr/java/jdk${javaver}/bin/${cmd}
+                                $javadir/bin/${cmd} 1000
+            update-alternatives --set ${cmd} $javadir/bin/${cmd}
         done
     }
 else
