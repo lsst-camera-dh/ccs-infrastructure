@@ -456,6 +456,16 @@ esac
 
 #- install the correct java from nfs
 
+jdkrpm=$pkgarchive/zulu17.rpm
+
+if [ -e $jdkrpm ]; then
+
+    rpm --quiet -q zulu-17 || rpm -i ${jdkrpm} > /dev/null
+else
+    echo "WARNING skipping missing jdkrpm: $jdkrpm"
+fi
+
+
 jdkrpm=$pkgarchive/jdk-8u202-linux-x64.rpm
 
 if [ -e $jdkrpm ]; then
