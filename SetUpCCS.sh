@@ -66,7 +66,8 @@ case $my_system in
         tempfile=/tmp/${0##*/}.$$
         trap "rm -f $tempfile" EXIT
 
-        [ $release -gt 7 ] && {
+        if [ $release -gt 7 ]; then
+
             for f in gcc g++ libffi-devel; do
                 rpm --quiet -q $f || yum -q -y install $f
             done
@@ -91,14 +92,46 @@ case $my_system in
             }
 
             chef gem install knife-attribute
-        }
+
+            ## As of 202312 chef limit_login does nothing.
+            f=/etc/sssd/sssd.conf
+            cp -a $f $f.BAK
+
+            ## TODO should check this is going to the right config section.
+            grep -q '^simple_allow_groups.*lsst-ccs' $f || {
+                sed -i '/^simple_allow_groups *= */ s/$/, lsst-ccs/' $f
+                grep -q '^simple_allow_groups.*lsst-ccs' $f || \
+                    echo 'simple_allow_groups = lsst-ccs' >> $f
+            }
+
+            users=ccs
+
+            ## Temporary accounts we may use during install.
+            for u in ccs-temp ccs-local; do
+                id $u >& /dev/null || continue
+                users="$users, $u"
+            done
+
+            grep -q '^simple_allow_users.*ccs' $f || {
+                sed -i "/^simple_allow_users *= */ s/\$/, $users/" $f
+                grep -q '^simple_allow_users.*ccs' $f || \
+                    echo "simple_allow_users = $users" >> $f
+            }
+
+            ## Exclude the limit_login part of the lsst role, since
+            ## it uses a netgroup and so would not work on rhel8+.
+            knife node attribute set $fhost yum_should "update nothing"
+            knife node attribute set $fhost kernel_updatedefault "no"
+
+        fi                      # $release -gt 7
 
         knife node show $fhost -Fjson > $tempfile
 
         ## This sets: limit_login, yum_should, kernel_updatedefault.
         ## We can relax the last two for some hosts, eg aios.
-        grep -qF 'role[lsst]' $tempfile || \
-            knife node run_list add $fhost 'role[lsst]'
+        [ $release -ge 7 ] || \
+            grep -qF 'role[lsst]' $tempfile || \
+                knife node run_list add $fhost 'role[lsst]'
 
         ## Unchanged: uno, lion (hcus).
         case $shost in
@@ -491,7 +524,9 @@ systemctl status fail2ban | grep -q 'Loaded: masked' || \
 #------------------------------------------------------------------------------
 #- ccs update-k5login
 
-[ $my_system = slac ] && {
+## No Kerberos in SLAC rhel8+. In any case update-k5login uses netgroups,
+## which do not exist in SLAC rhel8+. Will have to use sudo instead.
+[ $my_system = slac ] && [ $release -le 7 ] && {
 
     [ -d ~ccs/crontabs ] || mkdir ~ccs/crontabs
 
