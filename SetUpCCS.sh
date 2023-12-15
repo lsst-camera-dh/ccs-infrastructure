@@ -113,6 +113,9 @@ case $my_system in
                 users="$users, $u"
             done
 
+            ## TODO set limit_login to existing ones of these:
+            ## '["ccs", "ccs-temp", "ccs-local"]'
+
             grep -q '^simple_allow_users.*ccs' $f || {
                 sed -i "/^simple_allow_users *= */ s/\$/, $users/" $f
                 grep -q '^simple_allow_users.*ccs' $f || \
@@ -714,7 +717,10 @@ grep -q ^HISTSIZE /root/.bashrc || \
 
     ## FIXME this won't work because until we get this key we cannot login
     ## to other hosts. Need a common file-system (eg nfs).
-    rsync -aX lsst-mcm:.ssh/id_dsa .ssh/ || \
+    ## FIXME ds9 keys do not work in rhel9+. If we add an ed25519 key,
+    ## chef removes it. TODO modify chef.
+    [ $release -ge 9 ] || \
+        rsync -aX lsst-mcm:.ssh/id_dsa .ssh/ || \
         echo "Failed to copy /root/.ssh/id_dsa - push from another host"
 
     ## Chef manages /etc/ssh/ssh_known_hosts
