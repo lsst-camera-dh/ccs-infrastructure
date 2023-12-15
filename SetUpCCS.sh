@@ -91,7 +91,8 @@ case $my_system in
                     $licdir/chef_infra_client > $licfile
             }
 
-            chef gem install knife-attribute
+            knife node 2>&1 | grep -q 'node attribute' || \
+                chef gem install knife-attribute
 
             ## As of 202312 chef limit_login does nothing.
             f=/etc/sssd/sssd.conf
