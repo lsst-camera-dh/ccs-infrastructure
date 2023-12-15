@@ -133,6 +133,10 @@ case $my_system in
             grep -qF 'role[lsst]' $tempfile || \
                 knife node run_list add $fhost 'role[lsst]'
 
+        grep -q slac_crowdstrike $tempfile && \
+            ! /opt/CrowdStrike/falconctl -g --tags 2>&1 | grep -q lsst && \
+            /opt/CrowdStrike/falconctl -s --tags="lsst"
+
         ## Unchanged: uno, lion (hcus).
         case $shost in
             ## TODO: consider using "update security" (rather than "nothing")
