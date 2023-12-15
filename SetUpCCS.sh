@@ -516,6 +516,10 @@ rpm --quiet -q firewalld || yum -q -y install firewalld
 systemctl status firewalld | grep -q 'Loaded: masked' || \
     systemctl mask --now firewalld
 
+## For some reason this gets added to eg rhel9 motd.
+grep -q 'firewalld is active' /etc/motd && \
+    sed -i.BAK '/firewalld is active/d' /etc/motd
+
 
 rpm --quiet -q fail2ban || yum -q -y install fail2ban
 
