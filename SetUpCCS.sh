@@ -118,6 +118,8 @@ case $my_system in
                     echo "simple_allow_users = $users" >> $f
             }
 
+            systemctl restart sssd
+
             ## Exclude the limit_login part of the lsst role, since
             ## it uses a netgroup and so would not work on rhel8+.
             knife node attribute set $fhost yum_should "update nothing"
