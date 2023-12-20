@@ -12,7 +12,12 @@ srcdir=${0%/*}
 }
 
 module=versaapi
-version=1.5.0
+version=1.8.2
+prefix=
+grep -q 'release 7' /etc/redhat-release && {
+    version=1.5.0
+    prefix=vl_
+}
 
 ## Patched version with dkms.conf and dkms_build.sh script.
 src=/lnfs/lsst/pkgarchive/${module}-${version}_dkms.tar.xz
@@ -41,14 +46,30 @@ f=/etc/modprobe.d/vldrive.conf
 [ -e $f ] || cp $srcdir/modprobed-${f##*/} $f
 
 
-f=/usr/local/lib/libVL_OSALib.1.5.0.so
-[ -e $f ] || (
-    cp /usr/src/$module-$version/vl_${f##*/} $f
+for f in libVL_OSALib.$version.so libcgos.so; do
+
+    f=/usr/local/lib/$f
+
+    [ -e $f ] && continue
+
+    s=/usr/src/$module-$version/${prefix}${f##*/}
+
+    [ -e $s ] || continue
+
+    cp $s $f
+
+    case $f in
+        */libVL_OSALib*) : ;;
+        *) continue ;;
+    esac
+
     f=${f##*/}
-    cd /usr/local/lib
-    ln -s $f ${f/$version./}.1
-    ln -s $f ${f/$version./}
-)
+    (
+        cd /usr/local/lib
+        ln -s $f ${f/$version./}.1
+        ln -s $f ${f/$version./}
+    )
+done
 
 
 ## Set /dev/vldrive: group gpio, mode 660 (default is root 600).
