@@ -856,7 +856,7 @@ AutomaticLoginEnable=true' /etc/gdm/custom.conf
         ;;
 
     ## FIXME what are the right hosts for this?
-    lsst-uno11|lsst-uno08)
+    lsst-uno1[13]|lsst-uno08)
         ./imanager/setup
         ;;
 
