@@ -617,7 +617,8 @@ f=/etc/profile.d/lsst-ccs.sh
 ## Change the default for home directories.
 ## TODO seems like all users should be in the same group though,
 ## rather than each having their own?
-sed -i 's/^UMASK.*/UMASK 022/' /etc/login.defs
+sed -i.ORIG -e 's/^UMASK.*/UMASK 022/' \
+    -e 's/^HOME_MODE.*/HOME_MODE 0755/' /etc/login.defs
 
 chmod 755 /home/*/        # may not be appropriate for system accounts
 
