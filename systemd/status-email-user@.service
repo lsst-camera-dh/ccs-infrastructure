@@ -1,0 +1,7 @@
+[Unit]
+Description=status email for %i
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/systemd-email $EMAIL %i
+EnvironmentFile=/etc/ccs/systemd-email

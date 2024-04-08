@@ -1,0 +1,14 @@
+#!/bin/bash
+
+to=$1
+service=$2
+
+mail -Ssendwait -s "systemd status change: $service" $to <<EOF
+
+Status of service $service:
+
+$(systemctl status "$service")
+
+EOF
+
+exit 0

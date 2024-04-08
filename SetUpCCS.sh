@@ -752,6 +752,12 @@ grep -q ^HISTSIZE /root/.bashrc || \
 ./mrtg/setup || echo "WARNING: problem setting up mrtg"
 
 
+## systemd mail on failure utilities.
+cp ./systemd/systemd-email /usr/local/libexec/
+cp ./systemd/status-email-user@.service /etc/systemd/system/
+cp ./systemd/systemd-email.txt /etc/ccs/systemd-email
+
+
 ### Host-specific stuff.
 
 ## Note, in RHEL8 we should be able to use ifcfg- files for this.
