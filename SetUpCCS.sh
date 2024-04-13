@@ -685,6 +685,8 @@ f=/etc/sudoers.d/x2goserver
 ## of the script repository.
 cp -a ./ccs-sudoers-services /etc/cron.hourly/ || true
 
+cp ./ccs-log-compress /etc/cron.daily/ || true
+
 
 grep -q ^HISTFILESIZE /root/.bashrc || \
     printf "\nexport HISTFILESIZE=1000000\n" >> /root/.bashrc
