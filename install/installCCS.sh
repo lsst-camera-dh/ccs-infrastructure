@@ -35,7 +35,7 @@ then
 	exit
     fi
     gitStatus=`git status`
-    if [[ $gitStatus != *"nothing to commit, working directory clean"* ]]; then
+    if [[ $gitStatus != *"nothing to commit"* ]]; then
 	echo Directory $DEV_PACKAGE_DIR is not up to date. Exiting.
 	exit
     fi
