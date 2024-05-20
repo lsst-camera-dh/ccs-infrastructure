@@ -1,3 +1,4 @@
+#!/bin/bash
 
 #The first argument must be the environment IR2|ATS|IR2-Simulated
 if [ $# -eq 0 ]; then
@@ -32,7 +33,7 @@ then
 	git clone https://github.com/lsst-camera-dh/dev-package-lists.git $DEV_PACKAGE_DIR
     fi
     cd $DEV_PACKAGE_DIR || exit
-    if ! gitCheckout=$(git checkout $TAG) ;then	
+    if ! git checkout "$TAG"; then
 	echo "Tag $TAG does not exist"
 	exit
     fi
@@ -41,7 +42,6 @@ then
 	echo "Something went wrong when updating $DEV_PACKAGE_DIR: $?: $gitPull"
 	exit
     fi
-    
     gitStatus=$(git status)
     if [[ $gitStatus != *"nothing to commit, working tree clean"* ]]; then
 	echo Directory $DEV_PACKAGE_DIR is not up to date. Exiting.

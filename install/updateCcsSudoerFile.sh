@@ -1,11 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 
 BASEDIR=$(dirname "$0")
 
 ## This script must be run as root
-VERIFY_USER=`$BASEDIR/verifyUser.sh root`
+VERIFY_USER=$("$BASEDIR/verifyUser.sh" root)
 
-if [ "$VERIFY_USER" == 1 ] 
+if [ "$VERIFY_USER" == 1 ]
 then
 
     ## Check if the /etc/sudoers.d/user-ccs file exists
@@ -15,28 +15,28 @@ then
     then
 	touch $ccs_sudoer_file
     fi
-    
+
     ## Array containing the systemctl commands we want to add to the sudoer file for the ccs account
     systemctl_commands=( "status" "start" "stop" "restart" )
-    
+
     ## Loop over all the systemd CCS applications defined in /etc/systemd/system directory
-    for ccs_app in `grep -l "/lsst/ccs" /etc/systemd/system/*.service | sed -e "s/\/etc\/systemd\/system\///" | sed -e "s/.service//"`
+    while read -r ccs_app
     do
-	echo Working on CCS Application $ccs_app
-	
-	
-	for command in ${systemctl_commands[@]}
+	echo "Working on CCS Application $ccs_app"
+
+
+	for command in "${systemctl_commands[@]}"
 	do
-	    if ! `grep $ccs_app $ccs_sudoer_file | grep -q $command`;
+	    if ! grep "$ccs_app" "$ccs_sudoer_file" | grep -q "$command";
 	    then
 		echo "Adding command $command for $ccs_app"
 		echo "ccs ALL= NOPASSWD: /usr/bin/systemctl $command $ccs_app" >> $ccs_sudoer_file
 	    fi
 	done
-	
-    done
+
+    done < <(grep -l "/lsst/ccs" /etc/systemd/system/*.service | sed -e "s|/etc/systemd/system/||" -e "s/.service//")
 else
-    echo $VERIFY_USER
+    echo "$VERIFY_USER"
 fi
 
 
