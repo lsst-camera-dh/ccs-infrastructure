@@ -674,6 +674,13 @@ rpm --quiet -q gdm && {
     rpm -q --quiet icewm || yum -q -y install icewm || true
     rpm -q --quiet x2goclient || \
         yum -q -y install x2goclient x2goserver x2godesktopsharing || true
+    if [ $release -eq 7 ]; then
+        yum -y groupinstall 'MATE Desktop'
+    else
+        yum -y install mate-desktop mate-applets mate-menu mate-panel \
+            mate-session-manager mate-terminal mate-themes mate-utils \
+            marco caja
+    fi
 }
 
 f=/etc/sudoers.d/x2goserver
