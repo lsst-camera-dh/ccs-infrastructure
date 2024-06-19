@@ -970,7 +970,7 @@ f=/etc/sysctl.d/99-lsst-daq-ccs.conf
 
 ## TODO better detection method.
 case $shost in
-    lsst-vw01|lsst-it01) nvidia=t ;;
+    lsst-vw01|OFFlsst-it01) nvidia=t ;;
     *) nvidia= ;;
 esac
 
