@@ -449,7 +449,7 @@ rpm --quiet -q autofs || yum -q -y install autofs
 #------------------------------------------------------------------------------
 
 case $shost in
-    lsst-it01|*-aio*|*-vw*)
+    OFFlsst-it01|OFF*-aio*|OFF*-vw*)
         rpm --quiet -q zoom || rpm -Uvh $pkgarchive/zoom*.rpm || :
         ;;
 esac
