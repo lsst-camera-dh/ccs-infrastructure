@@ -978,7 +978,9 @@ esac
 
     ## This takes care of the /etc/kernel/postinst.d/ part,
     ## so long as the nvidia driver is installed with the dkms option.
-    rpm --quiet -q dkms || yum -q -y install dkms
+    for f in dkms libglvnd-devel; do
+        rpm --quiet -q $f || yum -q -y install $f
+    done
 
     f=/etc/modprobe.d/disable-nouveau.conf
     [ -s $f ] || cp ./nvidia/${f##*/} $f
