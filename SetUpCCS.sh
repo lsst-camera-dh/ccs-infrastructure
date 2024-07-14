@@ -680,6 +680,16 @@ rpm --quiet -q gdm && {
         yum -y install mate-desktop mate-applets mate-menu mate-panel \
             mate-session-manager mate-terminal mate-themes mate-utils \
             marco caja
+        [[ $shost == rubicon* ]] && {
+            yum -y groupinstall XFCE
+            yum -y install xfce4-notifyd xfce4-panel-profiles \
+                xfce4-screenshooter \
+                xfce4-cpufreq-plugin xfce4-cpugraph-plugin \
+                xfce4-datetime-plugin xfce4-mount-plugin \
+                xfce4-netload-plugin xfce4-screenshooter-plugin \
+                xfce4-sensors-plugin xfce4-systemload-plugin \
+                xfce4-weather-plugin xfce4-whiskermenu-plugin xfce4-xkb-plugin
+        }
     fi
 }
 
