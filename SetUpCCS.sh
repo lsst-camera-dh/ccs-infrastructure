@@ -689,6 +689,9 @@ rpm --quiet -q gdm && {
                 xfce4-netload-plugin xfce4-screenshooter-plugin \
                 xfce4-sensors-plugin xfce4-systemload-plugin \
                 xfce4-weather-plugin xfce4-whiskermenu-plugin xfce4-xkb-plugin
+
+            yum -y install rpmfusion-free-release
+            yum -y install ffmpeg-libs ffmpeg
         }
     fi
 }
