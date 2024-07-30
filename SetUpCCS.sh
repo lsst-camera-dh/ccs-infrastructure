@@ -203,7 +203,7 @@ packages=
 
 
 for f in epel-release git rsync emacs chrony nano screen sysstat unzip \
-      kernel-headers kernel-devel clustershell maven \
+      kernel-headers kernel-devel clustershell maven python3-pip \
       attr parallel gcc dkms usbutils firefox $packages; do
     rpm --quiet -q $f || yum -q -y install $f
 done
