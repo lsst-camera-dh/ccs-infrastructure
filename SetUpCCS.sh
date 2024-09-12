@@ -213,8 +213,11 @@ case $shost in
 esac
 
 # It's hard to construct this automatically.
-rpm --quiet -q clustershell && \
+rpm --quiet -q clustershell && {
+    f=/etc/clustershell/clush.conf.d/sudo.conf
+    [ -e $f ] || [ ! -e $f.example ] || mv $f.example $f
     echo "REMEMBER to customize /etc/clustershell/groups.d/local.cfg"
+}
 
 ## Ultimately ptp will replace this.
 case $my_system in
