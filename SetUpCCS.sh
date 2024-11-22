@@ -129,6 +129,13 @@ case $my_system in
             ## Exclude the limit_login part of the lsst role, since
             ## it uses a netgroup and so would not work on rhel8+.
             knife node attribute set $fhost yum_should "update nothing"
+            ## This replaces yum_should in rhel 8+.
+            ## It does not have a "security" option.
+            knife node attribute set $fhost slac_dnf-automatic "leavealone"
+            ## The above does not deactivate an already running timer.
+            rpm -q --quiet dnf-automatic && \
+                systemctl disable --now dnf-automatic.timer || true
+
             knife node attribute set $fhost kernel_updatedefault "no"
 
         fi                      # $release -gt 7
