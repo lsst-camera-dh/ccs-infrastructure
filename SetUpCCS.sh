@@ -50,6 +50,7 @@ fi
 pkgarchive=/lnfs/lsst/pkgarchive    # /gpfs/slac/lsst/fs2/u1/pkgarchive
 [ $my_system = slac ] || pkgarchive=/root
 
+## TODO rhel8: /usr/bin/crb enable
 [ $release -ge 9 ] && {
     rpm -q --quiet yum-utils || yum -y install yum-utils
     yum-config-manager --enable crb
@@ -70,7 +71,7 @@ case $my_system in
 
         if [ $release -gt 7 ]; then
 
-            for f in gcc g++ libffi-devel; do
+            for f in gcc gcc-c++ libffi-devel; do
                 rpm --quiet -q $f || yum -q -y install $f
             done
 
