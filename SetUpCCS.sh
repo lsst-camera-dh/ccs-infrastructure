@@ -688,7 +688,7 @@ rpm --quiet -q gdm && {
     if [ $release -eq 7 ]; then
         yum -y groupinstall 'MATE Desktop'
     else
-        yum -y install mate-desktop mate-applets mate-menu mate-panel \
+        yum -y install mate-desktop mate-applets mate-menus mate-panel \
             mate-session-manager mate-terminal mate-themes mate-utils \
             marco caja
         [[ $shost == rubicon* ]] && {
