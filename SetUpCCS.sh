@@ -64,6 +64,8 @@ case $my_system in
             /usr/sbin/hwclock -w # should not be needed, but is?
         }
 
+        ## TODO use: hostname -f
+        ## Eg on lsst-ir2daq01, fqdn is mixed case.
         fhost=$shost.slac.stanford.edu
 
         tempfile=/tmp/${0##*/}.$$
@@ -792,6 +794,71 @@ cp ./systemd/systemd-email.txt /etc/ccs/systemd-email
 
 
 ### Host-specific stuff.
+
+## Yuck - a historical mess. TODO unify and change file ownership, eg /data.
+
+case $shost in
+    lsst-dc10) g_lsstdaq=24002 ;;
+    lsst-dc*|lsst-ir2daq01) g_lsstdaq=24001 ;;
+    *) g_lsstdaq= ;;
+esac
+
+case $shost in
+    lsst-dc01) u_rce=23006 ;;
+    lsst-dc02) u_rce=23103 ;;
+    lsst-dc06|lsst-ir2daq01) u_rce=23005 ;;
+    lsst-dc*) u_rce=23002 ;;
+    *) u_rce= ;;
+esac
+
+case $shost in
+    lsst-dc0[126]|lsst-ir2daq01) u_dss=23003 ;; # on daq01, was 994
+    *) u_dss= ;;
+esac
+
+## Drop this in favour of lsst-daq.
+#case $shost in
+#    lsst-dc0[126]|lsst-ir2daq01) g_dss=23003 ;; # on daq01, was 992
+#    *) g_dss= ;;
+#esac
+
+## Primary groups are even more of a mess:
+## dc01: lsst-daq
+## dc02|ir2daq01: dsid
+## Let's default to using lsst-daq.
+case $shost in
+    lsst-dc01) u_dsid=23005 ;;
+    lsst-dc02) u_dsid=23102 ;;
+    lsst-ir2daq01) u_dsid=23102 ;; # was 995
+    *) u_dsid= ;;
+esac
+
+## Drop this in favour of lsst-daq.
+#case $shost in
+#    lsst-dc02|lsst-ir2daq01) g_dsid=23102 ;; # on daq01, was 993
+#    *) g_dsid= ;;
+#esac
+
+[ "$g_lsstdaq" ] && {
+    getent group lsst-daq >& /dev/null || \
+        groupadd --gid $g_lsstdaq lsst-daq
+    groups jgt | grep -q lsst-daq || usermod -a -G lsst-daq jgt
+}
+
+#[ "$g_dsid" ] && ! getent group dsid >& /dev/null && \
+#    groupadd --gid $g_dsid dsid
+
+for v in rce dss dsid; do
+
+    eval u=\$u_$v
+
+    [ "$u" ] || continue
+
+    getent passwd $v >& /dev/null && continue
+
+    /usr/sbin/adduser --no-create-home --gid lsst-daq \
+                      --shell /sbin/nologin --uid $u $v
+done
 
 ## Note, in RHEL8 we should be able to use ifcfg- files for this.
 ## dc01,03,06 (lsst-daq), dc02,ir2daq01 (p3p1)
