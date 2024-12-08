@@ -67,9 +67,17 @@ case $my_system in
             /usr/sbin/hwclock -w # should not be needed, but is?
         }
 
-        ## TODO use: hostname -f
-        ## Eg on lsst-ir2daq01, fqdn is mixed case.
-        fhost=$shost.slac.stanford.edu
+        ## Eg on lsst-ir2daq01, fqdn is mixed case (FIXME why?)
+        fhost=$(hostname -f)
+        case $fhost in
+            *.*) : ;;
+            *) fhost=$shost.slac.stanford.edu ;;
+        esac
+
+        grep -q ^lsst /etc/hostname || {
+            cp -a /etc/hostname /etc/hostname.ORIG
+            echo $fhost >| /etc/hostname
+        }
 
         tempfile=/tmp/${0##*/}.$$
         trap "rm -f $tempfile" EXIT
