@@ -37,7 +37,8 @@ mrtg_user=mrtg
 mrtg_group=$mrtg_user
 
 getent passwd $mrtg_user >& /dev/null || \
-    /usr/sbin/adduser -c "MRTG logging account" --create-home $mrtg_user
+    /usr/sbin/adduser -c "MRTG logging account" --uid 23101 \
+                      --create-home $mrtg_user
 
 
 mrtg_home=$(getent passwd $mrtg_user | cut -d: -f6)
