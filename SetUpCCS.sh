@@ -50,11 +50,14 @@ fi
 pkgarchive=/lnfs/lsst/pkgarchive    # /gpfs/slac/lsst/fs2/u1/pkgarchive
 [ $my_system = slac ] || pkgarchive=/root
 
-## TODO rhel8: /usr/bin/crb enable
 [ $release -ge 9 ] && {
     rpm -q --quiet yum-utils || yum -y install yum-utils
     yum-config-manager --enable crb
 }
+
+rpm -q --quiet epel-release || yum -y install epel-release
+
+[ $release -eq 8 ] && /usr/bin/crb enable
 
 case $my_system in
     slac)
@@ -212,7 +215,7 @@ packages=
     packages="ntp devtoolset-8 centos-release-scl-rh rh-git218"
 
 
-for f in epel-release git rsync emacs chrony nano screen sysstat unzip \
+for f in git rsync emacs chrony nano screen sysstat unzip \
       kernel-headers kernel-devel clustershell maven python3-pip \
       attr parallel gcc dkms usbutils firefox $packages; do
     rpm --quiet -q $f || yum -q -y install $f
