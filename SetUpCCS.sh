@@ -219,9 +219,12 @@ esac
 # TODO: maven is only needed on "development" machines,
 # but exactly what these are is not yet defined.
 packages=
-[ $release -eq 7 ] && \
+if [ $release -eq 7 ]; then
     packages="ntp devtoolset-8 centos-release-scl-rh rh-git218"
-
+elif [ $release -le 9 ]; then
+    packages="ncurses-compat-libs" # from epel; for daq libs (dc and ir2daq01)
+    echo "WARNING: create libreadline.so.6 by hand"
+fi
 
 for f in git rsync emacs chrony nano screen sysstat unzip \
       kernel-headers kernel-devel clustershell maven python3-pip \
