@@ -85,7 +85,8 @@ iface_name=$(nmcli -g ip4.address,general.device dev show 2> /dev/null | \
 if [ "$iface_name" ]; then
     iface_ip=$(sed -n "/Name: '$iface_name'/ s/.* Ip: '\([0-9.]*\).*/\1/p" $cfgfile)
     ## Yuck.
-    iface_max=$(grep -A10 $iface_name $cfgfile | sed -n 's/.*MaxBytes.*: //p')
+    ## Use '' to avoid failure on vs01 where we have enp5s0 and enp5s0d1.
+    iface_max=$(grep -A10 \'$iface_name\' $cfgfile | sed -n 's/.*MaxBytes.*: //p')
     ## FIXME Happens with virtual machines.
     [ "$iface_max" = 0 ] && iface_max=
 else
