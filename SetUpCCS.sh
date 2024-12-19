@@ -907,6 +907,12 @@ AutomaticLogin=ccs\
 AutomaticLoginEnable=true' /etc/gdm/custom.conf
         ;;
 
+    lsst-mcm)
+        getent passwd tomcat >& /dev/null || \
+            /usr/sbin/adduser --no-create-home --uid 23102 \
+              -d /opt/tomcat -s /bin/false tomcat
+        ;;
+
     *db[0-9][0-9])
         rpm -q --quiet mariadb-server || yum -q -y install mariadb-server
         systemctl enable mariadb
