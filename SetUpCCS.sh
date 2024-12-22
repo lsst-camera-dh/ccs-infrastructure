@@ -913,6 +913,13 @@ AutomaticLoginEnable=true' /etc/gdm/custom.conf
               -d /opt/tomcat -s /bin/false tomcat
         ;;
 
+    lsst-vs01)
+        [ $release -lt 9 ] || {
+            yum -y group install 'Virtualization Hypervisor'
+            systemctl enable --now libvirtd
+        }
+        ;;
+
     *db[0-9][0-9])
         rpm -q --quiet mariadb-server || yum -q -y install mariadb-server
         systemctl enable mariadb
