@@ -1,1 +1,1 @@
-EMAIL=k2p7u7n6e7u4r2r7@lsstc.slack.com
+EMAIL=cam-ir2-computing-ale-aaaapmdfksrbagipqtgs74jrw4@rubin-obs.slack.com
