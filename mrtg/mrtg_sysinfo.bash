@@ -406,8 +406,8 @@ function temp-ipmi ()
     $sudo ipmi-sensors -t temperature --no-header-output \
 	--comma 2> /dev/null | gawk -v FS=',' '\
 {
-    if ($2 ~ /Inlet/) inlet=$1
-    else if ($2 ~ /Exhaust/) exhaust=$1
+    if ($2 ~ /Inlet/) inlet=$4
+    else if ($2 ~ /Exhaust/) exhaust=$4
 }
 END \
 {
