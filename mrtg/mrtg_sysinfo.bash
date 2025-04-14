@@ -67,7 +67,7 @@ function ncpu ()
 ## http://help.lockergnome.com/linux/proc-uptime-idle-counter--ftopict498477.html
 function uptime ()
 {
-    gawk -v arg="$1" -v ncpu=`ncpu` '\
+    gawk -v arg="$1" -v ncpu=$(ncpu) '\
 
 function secs2days( secs    , days, hours, mins ) \
 {
@@ -125,7 +125,7 @@ function mrtg ()
 {
     local input=$1 output=$2 uptime node=${HOSTNAME%%.*}
 
-    uptime=`uptime`
+    uptime=$(uptime)
 
     ## We used to use cat and a here-doc, but that made selinux
     ## complain about access to /tmp.
@@ -259,7 +259,7 @@ function disk_part ()
     [ "$mount" ] || return 1
 
     local part label uuid device
-    part=`gawk -v mount="$mount" '$2 == mount { print $1 }' /etc/fstab 2> /dev/null`
+    part=$(gawk -v mount="$mount" '$2 == mount { print $1 }' /etc/fstab 2> /dev/null)
 
     case "$part" in
         /dev/*) echo "$part"; return 0 ;;
@@ -325,7 +325,7 @@ function du ()
     ## NB actually, this does not work either. df does not work for
     ## unmounted partitions.
     local device opt=${flag:--B1}
-###    device=`disk_part "$disk"`
+###    device=$(disk_part "$disk")
 
     device=${device:=$disk}     # if error
 
@@ -601,75 +601,75 @@ function idl ()
 ## Main body.
 
 case $1 in
-    cpufreq) mrtg `cpufreq` ;;
+    cpufreq) mrtg $(cpufreq) ;;
 
-    cpufreq2) mrtg `cpufreq2` ;;
+    cpufreq2) mrtg $(cpufreq2) ;;
 
-    fans) mrtg `fans` ;;
+    fans) mrtg $(fans) ;;
 
-    idl) mrtg `idl` ;;
+    idl) mrtg $(idl) ;;
 
-    iostat) mrtg `iostat` ;;
+    iostat) mrtg $(iostat) ;;
 
-    iostat-*) mrtg `iostat ${1#iostat-}` ;;
+    iostat-*) mrtg $(iostat ${1#iostat-}) ;;
 
-    mem) mrtg `mem` ;;
+    mem) mrtg $(mem) ;;
 
-    mem-buff) mrtg `mem buff` ;;
+    mem-buff) mrtg $(mem buff) ;;
 
-    loadavg) mrtg 0 `loadavg` ;;
+    loadavg) mrtg 0 $(loadavg) ;;
 
-    load-ui) mrtg `load ui` ;;
+    load-ui) mrtg $(load ui) ;;
 
-    load-us) mrtg `load us` ;;
+    load-us) mrtg $(load us) ;;
 
-    load-a) mrtg `load a` ;;
+    load-a) mrtg $(load a) ;;
 
-    proc*) mrtg 0 `procs` ;;
+    proc*) mrtg 0 $(procs) ;;
 
-    iroot|idata[1-3]|i/*) mrtg `du ${1#i} -i` ;;
+    iroot|idata[1-3]|i/*) mrtg $(du ${1#i} -i) ;;
 
-    root|data[1-3]|/*) mrtg `du $1` ;;
+    root|data[1-3]|/*) mrtg $(du $1) ;;
 
     ## scratch for comas.
-    scratch) mrtg `du /$1` ;;
+    scratch) mrtg $(du /$1) ;;
 
-    swap) mrtg `mem swap` ;;
+    swap) mrtg $(mem swap) ;;
 
     temp-cpu)
 #        if type -ap omreport >& /dev/null; then
         if [[ ${HOSTNAME%%.*} == xoc[01] ]]; then # faster
-            mrtg 0 `temp cpu`
+            mrtg 0 $(temp cpu)
         else
-            mrtg `temp-s`
+            mrtg $(temp-s)
         fi
         ;;
 
-    temp-cpu2) mrtg `temp-s2` ;;
+    temp-cpu2) mrtg $(temp-s2) ;;
 
-    temp-bmc) mrtg `temp bmc` ;;
+    temp-bmc) mrtg $(temp bmc) ;;
 
-    temp-board) mrtg 0 `temp board` ;;
+    temp-board) mrtg 0 $(temp board) ;;
 
-    temp-ipmi) mrtg `temp-ipmi` ;;
+    temp-ipmi) mrtg $(temp-ipmi) ;;
 
-    temp-pci) mrtg 0 `temp-pci` ;;
+    temp-pci) mrtg 0 $(temp-pci) ;;
 
-    uptime) mrtg `uptime t` ;;
+    uptime) mrtg $(uptime t) ;;
 
-    user*) mrtg 0 `users` ;;
+    user*) mrtg 0 $(users) ;;
 
-    /nfs/*) mrtg `du $1` ;;
+    /nfs/*) mrtg $(du $1) ;;
 
-    i/nfs/*) mrtg `du ${1#i} -i` ;;
+    i/nfs/*) mrtg $(du ${1#i} -i) ;;
 
-    /afs/*) mrtg `afsdu $1` ;;
+    /afs/*) mrtg $(afsdu $1) ;;
 
     ## Quota.
-    zfs-*) mrtg `zfsdu ${1#*-}` ;;
+    zfs-*) mrtg $(zfsdu ${1#*-}) ;;
 
     ## Actual used space.
-    zfstot-*) mrtg `zfsdu ${1#*-} t` ;;
+    zfstot-*) mrtg $(zfsdu ${1#*-} t) ;;
 
     *) die "Bad argument: $1" ;;
 esac
