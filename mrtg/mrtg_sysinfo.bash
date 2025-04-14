@@ -16,7 +16,7 @@ PN=${0##*/}
 
 function die ()
 {
-    [ $# -gt 0 ] && echo "${PN}: $@" 1>&2
+    [ $# -gt 0 ] && echo "${PN}: $*" 1>&2
     exit 1
 }                               # function die
 
@@ -311,7 +311,7 @@ function du ()
     case $disk in
        data?)
             disk=/${HOSTNAME%%.*}_$disk
-            mountedp $disk || {
+            mountedp "$disk" || {
                 ## TODO Return null string rather than 0s?
                 echo "0 0"
                 return 1
