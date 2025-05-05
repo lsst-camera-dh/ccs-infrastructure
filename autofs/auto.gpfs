@@ -4,5 +4,7 @@
 # Details may be found in the autofs(5) manpage
 
 /gpfs/slac/lsst/fs1/g          lsst-ss01.slac.stanford.edu:&
+/gpfs/slac/lsst/fs1/u          lsst-ss01.slac.stanford.edu:&
+/gpfs/slac/lsst/fs1/u1         lsst-ss01.slac.stanford.edu:&
 /gpfs/slac/lsst/fs2/u1         lsst-ss01.slac.stanford.edu:&
 /gpfs/slac/lsst/fs3/g          lsst-ss02.slac.stanford.edu:&
