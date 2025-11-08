@@ -140,17 +140,23 @@ case $my_system in
 
             systemctl restart sssd
 
+            ## FIXME 202511 knife node attribute not working?
             ## Exclude the limit_login part of the lsst role, since
             ## it uses a netgroup and so would not work on rhel8+.
-            knife node attribute set $fhost yum_should "update nothing"
+            knife node attribute set $fhost yum_should "update nothing" || \
+                echo "knife failed to set yum_should - try knife-node-edit"
+
             ## This replaces yum_should in rhel 8+.
             ## It does not have a "security" option.
-            knife node attribute set $fhost slac_dnf-automatic "leavealone"
+            knife node attribute set $fhost slac_dnf-automatic "leavealone" || \
+                  echo "knife failed to set dnf-auto - try knife-node-edit"
+
             ## The above does not deactivate an already running timer.
             rpm -q --quiet dnf-automatic && \
                 systemctl disable --now dnf-automatic.timer || true
 
-            knife node attribute set $fhost kernel_updatedefault "no"
+            knife node attribute set $fhost kernel_updatedefault "no" || \
+                echo "knife failed to set kernel_update - try knife-node-edit"
 
         fi                      # $release -gt 7
 
@@ -166,6 +172,7 @@ case $my_system in
             ! /opt/CrowdStrike/falconctl -g --tags 2>&1 | grep -q lsst && \
             /opt/CrowdStrike/falconctl -s --tags="lsst"
 
+        ## TODO added slac_ntp/slac_chrony leavealone on daq01/dc02.
         ## Unchanged: uno, lion (hcus).
         case $shost in
             ## TODO: consider using "update security" (rather than "nothing")
