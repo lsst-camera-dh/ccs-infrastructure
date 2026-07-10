@@ -490,34 +490,24 @@ esac
 
 #- install the correct java from nfs
 
+#jdkrpm=$pkgarchive/jdk-8u202-linux-x64.rpm
 jdkrpm=$pkgarchive/zulu17.rpm
 
 if [ -e $jdkrpm ]; then
 
-    rpm --quiet -q zulu-17 || rpm -i ${jdkrpm} > /dev/null
-
-    ## TODO add alternative entries, as per java17.pp
-else
-    echo "WARNING skipping missing jdkrpm: $jdkrpm"
-fi
-
-
-jdkrpm=$pkgarchive/jdk-8u202-linux-x64.rpm
-
-if [ -e $jdkrpm ]; then
-
-    ## 1.8.0_202
-    javaver=$(rpm -qi -p ${jdkrpm} | gawk '/^Version/ {print $3}';)
-    ## jdk1.8-1.8.0_202-fcs.x86_64
-    javapkg=$(rpm -q -p ${jdkrpm})
-    rpm --quiet -q ${javapkg} || rpm -i ${jdkrpm} > /dev/null
-    java -version 2>&1 | grep -q -F ${javaver} || {
-        ## TODO the -amd64 suffux added some point between 112 and 202.
-        javadir=/usr/java/jdk${javaver}-amd64
+    ## 17.64+17
+    javaver=$(rpm -qi -p $jdkrpm 2> /dev/null | gawk '/^Version/ {print $3}';)
+    ## zulu-17-17.64+17-1.x86_64
+    javapkg=$(rpm -q -p $jdkrpm 2> /dev/null)
+    rpm --quiet -q $javapkg || rpm -i $jdkrpm > /dev/null
+    java -version 2>&1 | grep -q -F $javaver || {
+        #javadir=/usr/java/jdk${javaver}-amd64
+        javadir=/usr/lib/jvm/java-17-zulu-openjdk-jdk
         for cmd in java javac javaws jar jconsole jstack; do
-            update-alternatives --install /usr/bin/${cmd} ${cmd} \
-                                $javadir/bin/${cmd} 1000
-            update-alternatives --set ${cmd} $javadir/bin/${cmd}
+            exe=$javadir/bin/$cmd
+            [ -e $exe ] || continue
+            update-alternatives --install /usr/bin/$cmd $cmd $exe 1000
+            update-alternatives --set $cmd $exe
         done
     }
 else
